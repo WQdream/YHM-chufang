@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    title="选择药方"
+    title="选择穴位"
     v-model="visible"
     width="70%"
     :close-on-click-modal="false"
@@ -11,7 +11,7 @@
       <div class="search-area">
         <el-input
           v-model="searchKeyword"
-          placeholder="请输入药材名称"
+          placeholder="请输入穴位名称"
           @keyup.enter="handleSearch"
           clearable
           @clear="getMedicineList"
@@ -20,14 +20,13 @@
             <el-button @click="handleSearch">
               <el-icon><Search /></el-icon>
             </el-button>
-            
           </template>
         </el-input>
       </div>
 
       <!-- 主体区域 -->
       <div class="content-area">
-        <!-- 左侧药材列表 -->
+        <!-- 左侧穴位列表 -->
         <div class="medicine-list">
           <el-scrollbar height="400px">
             <div class="medicine-grid">
@@ -47,36 +46,29 @@
         <!-- 右侧已选择列表 -->
         <div class="selected-list">
           <div class="selected-header">
-            <span>已选择药材 ({{ selectedMedicines.length }})</span>
-            <el-button link type="danger" @click="clearSelected" v-if="selectedMedicines.length">
+            <span>已选择穴位 ({{ selectedZhen.length }})</span>
+            <el-button link type="danger" @click="clearSelected" v-if="selectedZhen.length">
               清空
             </el-button>
           </div>
           <el-scrollbar height="360px">
-            <template v-if="selectedMedicines.length > 0">
-              <div v-for="item in selectedMedicines" :key="item.id" class="selected-item">
+            <template v-if="selectedZhen.length > 0">
+              <div v-for="item in selectedZhen" :key="item.id" class="selected-item">
                 <span class="medicine-name">{{ item.name }}</span>
-                <div class="weight-input">
-                  <el-input-number
-                    v-model="item.weight"
-                    :min="1"
-                    :max="1000"
-                    size="small"
-                    controls-position="right"
-                    @change="(value) => handleWeightChange(value, item)"
-                  />
-                  <el-select v-model="item.unit" size="small" style="width: 50px">
-                    <el-option label="g" value="g" />
-                    <el-option label="片" value="片" />
-                    <el-option label="枚" value="枚" />
-                  </el-select>
-                  <el-button type="danger" link @click="removeSelected(item.id)">
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
-                </div>
+                <el-input-number
+                  v-model="item.needleCount"
+                  :min="1"
+                  :max="99"
+                  size="small"
+                  class="needle-count"
+                  controls-position="right"
+                />
+                <el-button type="danger" link @click="removeSelected(item.id)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
               </div>
             </template>
-            <div v-else class="empty-text">暂未选择药材</div>
+            <div v-else class="empty-text">暂未选择穴位</div>
           </el-scrollbar>
         </div>
       </div>
@@ -95,13 +87,12 @@
 import { ref, watch } from 'vue'
 import { Search, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { useChineseMedicineApi } from '/@/api/chineseMedicine/index'
+import { useAcupointsApi } from '/@/api/zhenjiuManage/index'
 
 interface Medicine {
   id: string
   name: string
-  weight: number
-  unit: string
+  needleCount?: number
 }
 
 const props = defineProps<{
@@ -117,7 +108,7 @@ const emit = defineEmits<{
 const visible = ref(false)
 const searchKeyword = ref('')
 const medicineList = ref<Medicine[]>([])
-const selectedMedicines = ref<Medicine[]>([])
+const selectedZhen = ref<Medicine[]>([])
 
 // 监听弹窗显示状态
 watch(() => props.modelValue, (val) => {
@@ -126,7 +117,7 @@ watch(() => props.modelValue, (val) => {
     // 弹窗打开时，初始化数据
     getMedicineList()
     // 确保使用新的数组引用，避免直接修改 props
-    selectedMedicines.value = props.defaultSelected ? [...props.defaultSelected] : []
+    selectedZhen.value = props.defaultSelected ? [...props.defaultSelected] : []
   }
 })
 
@@ -135,24 +126,21 @@ watch(() => visible.value, (val) => {
   emit('update:modelValue', val)
 })
 
-// 获取药材列表
+// 获取穴位列表
 const getMedicineList = (keyword = '') => {
-  useChineseMedicineApi()
-    .getMedicines({page:1, pageSize:9999, name: keyword })
+  useAcupointsApi()
+    .getAcupoints({page:1, pageSize:9999, name: keyword })
     .then((res) => {
       medicineList.value = res.data.list.map(item => ({
         id: item.id,
         name: item.name,
-        weight: selectedMedicines.value.find(m => m.id === item.id)?.weight || 15,
-        unit: item.unit || 'g'
+        needleCount: 1
       }))
 
       if(medicineList.value.length == 1){
-        selectedMedicines.value.push({
+        selectedZhen.value.push({
           id: medicineList.value[0].id,
-          name: medicineList.value[0].name,
-          weight: 15,
-          unit: medicineList.value[0].unit || 'g'
+          name: medicineList.value[0].name
         })
       }
       searchKeyword.value = ''
@@ -164,68 +152,53 @@ const handleSearch = () => {
   getMedicineList(searchKeyword.value)
 }
 
-// 选择/取消选择药材
+// 选择/取消选择穴位
 const toggleSelect = (medicine: Medicine) => {
-  const index = selectedMedicines.value.findIndex(item => item.name === medicine.name)
+  const index = selectedZhen.value.findIndex(item => item.name === medicine.name)
   if (index === -1) {
-    selectedMedicines.value.push({
+    selectedZhen.value.push({
       id: medicine.id,
       name: medicine.name,
-      weight: 15,
-      unit: 'g'
+      needleCount: 1
     })
   } else {
-    selectedMedicines.value.splice(index, 1)
+    selectedZhen.value.splice(index, 1)
   }
 }
 
-// 移除已选择的药材
+// 移除已选择的穴位
 const removeSelected = (id: string) => {
-  const index = selectedMedicines.value.findIndex(item => item.id === id)
+  const index = selectedZhen.value.findIndex(item => item.id === id)
   if (index !== -1) {
-    selectedMedicines.value.splice(index, 1)
+    selectedZhen.value.splice(index, 1)
   }
 }
 
 // 清空选择
 const clearSelected = () => {
-  selectedMedicines.value = []
+  selectedZhen.value = []
 }
 
 // 确认选择
 const handleConfirm = () => {
-  if (!selectedMedicines.value.length) {
-    ElMessage.warning('请至少选择一个药材')
+  if (!selectedZhen.value.length) {
+    ElMessage.warning('请至少选择一个穴位')
     return
   }
-
-  // 检查是否有药材克数为空或0
-  const invalidMedicine = selectedMedicines.value.find(medicine => !medicine.weight || medicine.weight === 0)
-  if (invalidMedicine) {
-    ElMessage.warning(`药材 "${invalidMedicine.name}" 的克数不能为空或0`)
-    return
-  }
-
-  emit('confirm', selectedMedicines.value)
+  console.log(selectedZhen.value, 'kk');
+  
+  emit('confirm', selectedZhen.value)
   visible.value = false
 }
 
 // 关闭弹窗
 const handleClose = () => {
   searchKeyword.value = ''
-  // 不再清空选中的药材，保持状态
+  // 不再清空选中的穴位，保持状态
 }
 
 const isSelected = (name: string): boolean => {
-  return selectedMedicines.value.some(item => item.name === name)
-}
-
-// 修改克数变化的处理方法
-const handleWeightChange = (value: number, medicine: Medicine) => {
-  const index = selectedMedicines.value.findIndex(item => item.id === medicine.id)
-  if (index !== -1) {
-    selectedMedicines.value[index].weight = value
-  }
+  return selectedZhen.value.some(item => item.name === name)
 }
 </script>
 
@@ -278,49 +251,74 @@ const handleWeightChange = (value: number, medicine: Medicine) => {
     .selected-list {
       width: 300px;
       border: 1px solid var(--el-border-color-lighter);
-      border-radius: 4px;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 
       .selected-header {
-        padding: 10px;
+        padding: 12px 16px;
         border-bottom: 1px solid var(--el-border-color-lighter);
         display: flex;
         justify-content: space-between;
         align-items: center;
+        background-color: var(--el-fill-color-light);
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+
+        span {
+          font-weight: 500;
+          color: var(--el-text-color-primary);
+        }
       }
 
       .selected-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px;
+        padding: 12px 16px;
         border-bottom: 1px solid var(--el-border-color-lighter);
+        transition: all 0.3s ease;
         
         &:hover {
-          background-color: var(--el-fill-color-light);
+          background-color: var(--el-color-primary-light-9);
+
+          .el-button {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
         
         .medicine-name {
           flex: 1;
           font-size: 14px;
+          color: var(--el-text-color-primary);
         }
-        
-        .weight-input {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          
-          :deep(.el-input-number) {
-            width: 100px;
+
+        .needle-count {
+          width: 90px;
+          margin: 0 8px;
+        }
+
+        .el-button {
+          opacity: 0;
+          transform: translateX(10px);
+          transition: all 0.3s ease;
+          padding: 4px 8px;
+          margin-left: 12px;
+
+          &:hover {
+            color: var(--el-color-danger) !important;
+            background-color: var(--el-color-danger-light-9);
           }
         }
       }
 
       .empty-text {
-        padding: 20px;
+        padding: 32px 16px;
         text-align: center;
         color: var(--el-text-color-secondary);
+        font-size: 14px;
       }
     }
   }
 }
-</style> 
+</style>

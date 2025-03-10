@@ -122,7 +122,7 @@
 
 <script setup lang="ts" name="zhongyaoManage">
 import { reactive, ref } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import * as XLSX from 'xlsx';
 import { useChineseMedicineApi } from '/@/api/chineseMedicine/index';
 
@@ -298,15 +298,24 @@ const banchDelete = () => {
   const $table = tableRef.value
   if ($table) {
     const selectRecords = $table.getCheckboxRecords()
-	let ids = []
-	selectRecords.forEach(item => {
-		ids.push(item.id)
-	})
-	let obj = {
-		id: ids
-	}
-	
-	handleDelete(obj)
+    if (selectRecords.length === 0) {
+      ElMessage.warning('请选择要删除的数据');
+      return;
+    }
+    ElMessageBox.confirm('确定要删除选中的数据吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }).then(() => {
+      let ids = []
+      selectRecords.forEach(item => {
+        ids.push(item.id)
+      })
+      let obj = {
+        id: ids
+      }
+      handleDelete(obj)
+    }).catch(() => {})
   }
 }
 

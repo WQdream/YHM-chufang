@@ -5,7 +5,7 @@
 			<div class="content-wrapper">
 				<vxe-form v-bind="formOptions" v-on="formEvents"></vxe-form>
 				<div style="margin-bottom: 10px;">
-					<el-button type="primary" size="default" @click="handleAdd">新增中药材</el-button>
+					<el-button type="primary" size="default" @click="handleAdd">新增穴位</el-button>
 					<el-button type="primary" size="default" @click="handleImport">导入</el-button>
 					<el-button type="danger" size="default" @click="banchDelete">批量删除</el-button>
 				</div>
@@ -24,7 +24,7 @@
 					>
 						<vxe-column type="checkbox" width="60"></vxe-column>
 						<vxe-column field="seq" type="seq" width="70"></vxe-column>
-						<vxe-column field="name" title="中药材名称"></vxe-column>
+						<vxe-column field="name" title="穴位名称"></vxe-column>
 						<vxe-column field="active" title="操作" width="200" fixed="right" align="center">
 							<template #default="{ row }">
 								<el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
@@ -63,8 +63,8 @@
 			:close-on-click-modal="false"
 		>
 			<el-form :model="formData" label-width="100px">
-				<el-form-item label="中药材名称">
-					<el-input v-model="formData.name" placeholder="请输入中药材名称"></el-input>
+				<el-form-item label="穴位名称">
+					<el-input v-model="formData.name" placeholder="请输入穴位名称"></el-input>
 				</el-form-item>
 			</el-form>
 			<template #footer>
@@ -77,7 +77,7 @@
 
 		<!-- 导入弹窗 -->
 		<el-dialog
-			title="导入中药材"
+			title="导入穴位"
 			v-model="importDialogVisible"
 			width="30%"
 			:close-on-click-modal="false"
@@ -105,7 +105,7 @@
 							<div class="el-upload__tip">
 								请上传Excel文件，仅支持.xlsx,.xls格式
 							</div>
-							<div style="color: red;">导入文件列名必须包含中药材名称</div>
+							<div style="color: red;">导入文件列名必须包含穴位名称</div>
 						</template>
 					</el-upload>
 				</el-form-item>
@@ -120,11 +120,11 @@
 	</div>
 </template>
 
-<script setup lang="ts" name="zhongyaoManage">
+<script setup lang="ts" name="acupointManage">
 import { reactive, ref } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import * as XLSX from 'xlsx';
-import { useChineseMedicineApi } from '/@/api/chineseMedicine/index';
+import { useAcupointsApi } from '/@/api/zhenjiuManage/index';
 
 interface RowVO {
 	id: string;
@@ -142,7 +142,7 @@ const pageVO = reactive({
 
 const loading = ref(false);
 const dialogVisible = ref(false);
-const dialogTitle = ref('新增中药材');
+const dialogTitle = ref('新增穴位');
 const formData = reactive({
 	id: '',
 	name: ''
@@ -157,7 +157,7 @@ const formOptions = reactive<VxeFormProps<FormDataVO>>({
 		name: '',
 	},
 	items: [
-		{ field: 'name', title: '中药材名称', span: 8, itemRender: { name: 'VxeInput' } },
+		{ field: 'name', title: '穴位名称', span: 8, itemRender: { name: 'VxeInput' } },
 		{
 			span: 1,
 			collapseNode: false,
@@ -177,12 +177,12 @@ const formEvents: VxeFormListeners = {
 	submit(e) {
 		pageVO.currentPage = 1
 		searchForm.name = e.data.name
-		getMedicines(e.data.name)
+		getAcupoints(e.data.name)
 	},
 	reset() {
 		pageVO.currentPage = 1
 		searchForm.name = ''
-		getMedicines()
+		getAcupoints()
 	},
 };
 
@@ -191,40 +191,40 @@ const tableData = ref<RowVO[]>([
 ]);
 
 // 获取中药材列表
-const getMedicines = (name = '') => {
+const getAcupoints = (name = '') => {
 	let obj = {
 		page: pageVO.currentPage,
 		pageSize: pageVO.pageSize,
 		name: name
 	}
-	useChineseMedicineApi().getMedicines(obj).then(res => {
+	useAcupointsApi().getAcupoints(obj).then(res => {
 		tableData.value = res.data.list
 		pageVO.total = res.data.total
 	})
 }
 // 初始化中药材列表
-getMedicines()
+getAcupoints()
 
 const updateMedicines = (id = '',name = '') => {
 	let obj = {
 		id: id,
 		name: name
 	}
-	useChineseMedicineApi().update(obj).then(res => {
+	useAcupointsApi().update(obj).then(res => {
 		console.log(res,'res')
 	})
 }
 
 // 新增按钮点击
 const handleAdd = () => {
-	dialogTitle.value = '新增中药材';
+	dialogTitle.value = '新增穴位';
 	formData.name = '';
 	dialogVisible.value = true;
 };
 
 // 编辑按钮点击
 const handleEdit = (row: RowVO) => {
-	dialogTitle.value = '编辑中药材';
+	dialogTitle.value = '编辑穴位';
 	formData.id = row.id;
 	formData.name = row.name;
 	dialogVisible.value = true;
@@ -235,10 +235,10 @@ const handleDelete = (row: any) => {
 	let obj = {
 		ids: Array.isArray(row.id) ?row.id:[row.id]
 	}
-	useChineseMedicineApi().delete(obj).then(res => {	
+	useAcupointsApi().delete(obj).then(res => {	
 		ElMessage.success('删除成功');
 		pageVO.currentPage = 1
-		getMedicines()
+		getAcupoints()
 	}).catch(err => {
 		ElMessage.error('删除失败');
 	})
@@ -247,21 +247,21 @@ const handleDelete = (row: any) => {
 // 弹窗确定按钮
 const handleSubmit = () => {
 	if (!formData.name) {
-		ElMessage.warning('请输入中药材名称');
+		ElMessage.warning('请输入穴位名称');
 		return;
 	}
-	if(dialogTitle.value == '新增中药材'){
+	if(dialogTitle.value == '新增穴位'){
 		let obj = {
 			data: {
 				name: formData.name
 			}
 		}
-		useChineseMedicineApi().create(obj).then(res => {
+		useAcupointsApi().create(obj).then(res => {
 				ElMessage.success('添加成功');
 				dialogVisible.value = false;
 				pageVO.currentPage = 1
 				submitLoading.value = false
-				getMedicines()
+				getAcupoints()
 		}).catch(err => {
 			submitLoading.value = false
 			if(err.response.data.code == 502){
@@ -276,11 +276,11 @@ const handleSubmit = () => {
 			id: formData.id,
 			name: formData.name
 		}
-		useChineseMedicineApi().update(obj).then(res => {
+		useAcupointsApi().update(obj).then(res => {
 			ElMessage.success('修改成功');
 			dialogVisible.value = false;
 			submitLoading.value = false
-			getMedicines()
+			getAcupoints()
 		}).catch(err => {
 			submitLoading.value = false
 			if(err.response.data.code == 502){
@@ -298,15 +298,24 @@ const banchDelete = () => {
   const $table = tableRef.value
   if ($table) {
     const selectRecords = $table.getCheckboxRecords()
-	let ids = []
-	selectRecords.forEach(item => {
-		ids.push(item.id)
-	})
-	let obj = {
-		id: ids
-	}
-	
-	handleDelete(obj)
+    if (selectRecords.length === 0) {
+      ElMessage.warning('请选择要删除的数据');
+      return;
+    }
+    ElMessageBox.confirm('确定要删除选中的数据吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }).then(() => {
+      let ids = []
+      selectRecords.forEach(item => {
+        ids.push(item.id)
+      })
+      let obj = {
+        id: ids
+      }
+      handleDelete(obj)
+    }).catch(() => {})
   }
 }
 
@@ -314,7 +323,7 @@ const banchDelete = () => {
 const pageChange = ({ pageSize, currentPage }: { pageSize: number; currentPage: number }) => {
 	pageVO.currentPage = currentPage;
 	pageVO.pageSize = pageSize;
-	getMedicines(searchForm.name)
+	getAcupoints(searchForm.name)
 };
 
 // 导入相关数据
@@ -354,15 +363,15 @@ const handleImportSubmit = async () => {
 			const worksheet = workbook.Sheets[firstSheetName];
 			const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-			// 检查是否包含中药材名称列
-			if (jsonData.length > 0 && !jsonData[0].hasOwnProperty('中药材名称')) {
-				ElMessage.error('Excel文件中未找到"中药材名称"列');
+			// 检查是否包含穴位名称列
+			if (jsonData.length > 0 && !jsonData[0].hasOwnProperty('穴位名称')) {
+				ElMessage.error('Excel文件中未找到"穴位名称"列');
 				return;
 			}
 
 			// 处理导入的数据
 			const importedData = jsonData.map((item: any, index: number) => ({
-				name: item['中药材名称']
+				name: item['穴位名称']
 			}));
 
 			// 根据导入方式处理数据
@@ -377,11 +386,11 @@ const handleImportSubmit = async () => {
 				type: importForm.importType,
 				data: importedData
 			}
-			useChineseMedicineApi().create(obj).then(res => {
+			useAcupointsApi().create(obj).then(res => {
 				if(res.code == 200){
 					ElMessage.success('导入成功');
 					pageVO.currentPage = 1
-					getMedicines()
+					getAcupoints()
 					importDialogVisible.value = false;
 				}
 			}).catch(err => {

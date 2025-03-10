@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="visible"
-    :title="'处方详情'"
+    :title="'施针详情'"
     width="800px"
     :close-on-click-modal="false"
     class="prescription-dialog"
@@ -17,8 +17,8 @@
       <!-- 处方内容 -->
       <div ref="printRef" class="prescription-content">
         <div class="prescription-header">
-          <h1>中医处方笺</h1>
-          <div class="prescription-date">开具时间：{{ prescriptionData.prescriptionDate }}</div>
+          <h1>针灸处方</h1>
+          <div class="prescription-date">施针时间：{{ acupointsData.acupunctureDate }}</div>
         </div>
 
         <!-- 患者信息 -->
@@ -26,15 +26,15 @@
           <div class="info-row">
             <div class="info-item">
               <span class="label">姓名：</span>
-              <span class="value">{{ prescriptionData.patientName }}</span>
+              <span class="value">{{ acupointsData.patientName }}</span>
             </div>
             <div class="info-item">
               <span class="label">性别：</span>
-              <span class="value">{{ prescriptionData.gender === '1' ? '男' : '女' }}</span>
+              <span class="value">{{ acupointsData.gender === '1' ? '男' : '女' }}</span>
             </div>
             <div class="info-item">
               <span class="label">年龄：</span>
-              <span class="value">{{ prescriptionData.age == 0?'保密': `${prescriptionData.age}岁`}}</span>
+              <span class="value">{{ acupointsData.age == 0?'保密': `${acupointsData.age}岁`}}</span>
             </div>
           </div>
         </div>
@@ -42,17 +42,17 @@
         <!-- 诊断信息 -->
         <div class="section">
           <div class="section-title">临床诊断</div>
-          <div class="section-content">{{ prescriptionData.diagnosis }}</div>
+          <div class="section-content">{{ acupointsData.diagnosis }}</div>
         </div>
 
         <!-- 药方信息 -->
         <div class="section">
-          <div class="section-title">处方药方</div>
+          <div class="section-title">穴位</div>
           <div class="section-content">
             <div class="medicine-list">
               <template v-for="(medicine, index) in prescriptionMedicines" :key="medicine.id">
                 <span class="medicine-item">
-                  {{ medicine.name }} {{ medicine.weight }} {{ medicine.unit }}
+                  {{ medicine.name }} {{ medicine.needleCount }}针
                 </span>
                 <span v-if="index !== prescriptionMedicines.length - 1" class="separator">、</span>
               </template>
@@ -60,33 +60,11 @@
           </div>
         </div>
 
-        <!-- 副数 -->
-        <div class="section">
-          <div class="section-title">副数</div>
-          <div class="section-content">
-            <div class="medicine-list">
-              {{ prescriptionData.pairs + '副' }}
-            </div>
-          </div>
-        </div>
 
         <!-- 备注信息 -->
-        <div class="section" v-if="prescriptionData.remark">
+        <div class="section" v-if="acupointsData.remark">
           <div class="section-title">备注</div>
-          <div class="section-content">{{ prescriptionData.remark }}</div>
-        </div>
-
-        <!-- 处方图片 -->
-        <div class="section" v-if="prescriptionData.imageUrl">
-          <div class="section-title">处方图片</div>
-          <div class="image-section">
-            <el-image 
-              :src="prescriptionData.imageUrl"
-              :preview-src-list="[prescriptionData.imageUrl]"
-              fit="contain"
-              class="prescription-image"
-            />
-          </div>
+          <div class="section-content">{{ acupointsData.remark }}</div>
         </div>
       </div>
     </div>
@@ -98,28 +76,26 @@ import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Printer } from '@element-plus/icons-vue'
 
-interface PrescriptionData {
+interface AcupointsData {
   id: string
   patientName: string
   age: string | number
   gender: string
   prescriptionDate: string
   diagnosis: string
-  prescription: string
-  imageUrl: string
+  acupoints: string
   remark: string
 }
 
 interface Medicine {
   id: string
   name: string
-  weight: number
-  unit: string
+  needleCount: number
 }
 
 const props = defineProps<{
   modelValue: boolean
-  prescriptionData: PrescriptionData
+  acupointsData: AcupointsData
 }>()
 
 const emit = defineEmits<{
@@ -133,22 +109,20 @@ const printRef = ref<HTMLElement | null>(null)
 // 监听弹窗显示状态
 watch(() => props.modelValue, (val) => {
   visible.value = val
-  if (val && props.prescriptionData.prescription) {
+  if (val && props.acupointsData.acupoints) {
     // 将处方字符串转换为药材数组，格式为：药材1 10g、药材2 15mg
-    const medicines = props.prescriptionData.prescription.split('、')
-    prescriptionMedicines.value = medicines.map((item, index) => {
-      const [name, weightWithUnit] = item.split(' ')
+    const zhen = props.acupointsData.acupoints.split('、')
+    prescriptionMedicines.value = zhen.map((item, index) => {
+      const [name, countStr] = item.split(' ')
 			// 使用正则表达式匹配数字和非数字部分
-			const match = weightWithUnit.match(/(\d+)([^\d]+)/)
+			const match = countStr.match(/(\d+)([^\d]+)/)
 			
 			// 如果匹配成功，则分别获取数字(克数)和非数字(单位)部分
-			const weight = match ? parseInt(match[1]) : 0
-			const unit = match ? match[2] : 'g' // 如果没有匹配到单位，默认为'g'
+			const needleCount = match ? parseInt(match[1]) : 1
       return {
         id: String(index),
         name,
-        weight,
-        unit
+        needleCount
       }
     })
   }

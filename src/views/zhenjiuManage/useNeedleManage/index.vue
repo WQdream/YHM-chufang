@@ -5,7 +5,7 @@
 			<div class="content-wrapper">
 				<vxe-form v-bind="formOptions" v-on="formEvents"></vxe-form>
 				<div style="margin-bottom: 10px;">
-					<el-button type="primary" size="default" @click="handleAdd">新增处方</el-button>
+					<el-button type="primary" size="default" @click="handleAdd">新增</el-button>
 					<!-- <el-button type="primary" size="default" @click="handleImport">导入</el-button> -->
 					<el-button type="danger" size="default" @click="banchDelete">批量删除</el-button>
 					
@@ -46,27 +46,10 @@
 							</template>
 						</vxe-column>
 						<vxe-column field="gender" title="性别"></vxe-column>
-						<vxe-column field="prescriptionDate" title="开方时间"></vxe-column>
+						<vxe-column field="acupunctureDate" title="施针时间"></vxe-column>
 						<vxe-column field="diagnosis" title="临床诊断"></vxe-column>
-						<vxe-column field="prescription" title="药方"></vxe-column>
-						<vxe-column field="pairs" title="副数"></vxe-column>
-					
-						<vxe-column field="imageUrl" align="center" title="药方图片">
-							<template #default="{ row }">
-								<div class="image-cell">
-									<el-image 
-										v-if="row.imageUrl"
-										:src="checkHttpProtocol(row.imageUrl) ? row.imageUrl : baseUrl + row.imageUrl"
-										:preview-src-list="[checkHttpProtocol(row.imageUrl) ? row.imageUrl : baseUrl + row.imageUrl]"
-										:initial-index="0"
-										preview-teleported
-										class="table-image"
-										fit="cover"
-									/>
-									<span v-else>暂无图片</span>
-								</div>
-							</template>
-						</vxe-column>
+						<vxe-column field="acupoints" title="穴位"></vxe-column>
+						<vxe-column field="remark" title="备注"></vxe-column>
 						
 						<vxe-column field="active" title="操作" width="200" fixed="right" align="center">
 							<template #default="{ row }">
@@ -130,9 +113,9 @@
 						</el-form-item>
 					</el-col>
 					<el-col :span="12">
-						<el-form-item label="开方时间" required>
+						<el-form-item label="施针时间" required>
 							<el-date-picker
-								v-model="formData.prescriptionDate"
+								v-model="formData.acupunctureDate"
 								type="date"
 								placeholder="选择开方时间"
 								format="YYYY-MM-DD"
@@ -151,34 +134,24 @@
 					/>
 				</el-form-item>
 
-				<el-form-item label="药方">
-					<div class="prescription-display">
-						<div v-if="selectedMedicines.length > 0" class="medicine-list">
+				<el-form-item label="穴位">
+					<div class="acupoints-display">
+						<div v-if="selectedZhen.length > 0" class="medicine-list">
 							<el-tag
-								v-for="medicine in selectedMedicines"
+								v-for="medicine in selectedZhen"
 								:key="medicine.id"
 								class="medicine-tag"
 								type="success"
 								effect="light"
 							>
-								{{ medicine.name }} {{ medicine.weight }} {{  medicine.unit }}
+								{{ medicine.name }} {{ medicine.needleCount }}针
 							</el-tag>
 						</div>
-						<div v-else class="empty-text">暂未选择药材</div>
+						<div v-else class="empty-text">暂未穴位</div>
 						<el-button type="primary" @click="selectMedicineVisible = true">
-							选择药材
+							选择穴位
 						</el-button>
 					</div>
-				</el-form-item>
-
-				<el-form-item label="副数" required>
-					<el-input-number
-						v-model="formData.pairs"
-						:min="1"
-						:max="99"
-						controls-position="right"
-						placeholder="请输入副数"
-					/>
 				</el-form-item>
 
 				<el-form-item label="备注">
@@ -190,26 +163,6 @@
 					/>
 				</el-form-item>
 
-				<el-form-item label="药方图片">
-					<el-upload
-						class="prescription-uploader"
-						:action="uploadUrl"
-						:show-file-list="false"
-						:on-success="handleImageSuccess"
-						:on-remove="handleImageRemove"
-						:before-upload="beforeImageUpload"
-					>
-						<template v-if="formData.imageUrl">
-							<div class="image-preview">
-								<img :src="checkHttpProtocol(formData.imageUrl) ? formData.imageUrl : baseUrl + formData.imageUrl" class="prescription-image" />
-								<div class="image-actions">
-									<el-icon class="delete-icon" @click.stop="handleImageRemove"><Delete /></el-icon>
-								</div>
-							</div>
-						</template>
-						<el-icon v-else class="prescription-uploader-icon"><Plus /></el-icon>
-					</el-upload>
-				</el-form-item>
 			</el-form>
 			<template #footer>
 				<span class="dialog-footer">
@@ -252,16 +205,16 @@
 		</el-dialog>
 
 		<!-- 引入选择药方组件 -->
-		<SelectMedicine
+		<SelectZhen
 			v-model="selectMedicineVisible"
-			:default-selected="selectedMedicines"
+			:default-selected="selectedZhen"
 			@confirm="handleMedicineConfirm"
 		/>
 
 		<!-- 处方查看组件 -->
 		<PrescriptionView
 			v-model="prescriptionViewVisible"
-			:prescription-data="currentPrescription"
+			:acupoints-data="currentPrescription"
 		/>
 
 		<!-- 新增导入组件 -->
@@ -276,13 +229,13 @@
 	</div>
 </template>
 
-<script setup lang="ts" name="zhongyaoManage">
+<script setup lang="ts" name="useNeedleManage">
 import { reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus, Delete, ArrowDown, Download, Printer, Edit } from '@element-plus/icons-vue'
 import * as XLSX from 'xlsx';
-import { usePrescriptionsApi } from '/@/api/prescriptions/index';
-import SelectMedicine from './components/SelectMedicine.vue'
+import { useAcupointsApi } from '/@/api/zhenjiuManage/index';
+import SelectZhen from './components/SelectZhen.vue'
 import PrescriptionView from './components/PrescriptionView.vue'
 import { useCommonApi } from '/@/api/common/index';
 
@@ -295,8 +248,7 @@ interface RowVO {
 interface Medicine {
 	id: string;
 	name: string;
-	weight: number; // 克数
-	unit: string; // 添加单位字段
+	needleCount: number; // 针数
 }
 
 const tableRef = ref<VxeTableInstance<RowVO>>()
@@ -314,22 +266,64 @@ const uploadUrl = `${import.meta.env.VITE_API_URL}/api/common/upload`
 // const baseUrl = import.meta.env.VITE_API_URL.slice(0, -1)
 const baseUrl = import.meta.env.VITE_API_URL
 
-const dialogTitle = ref('新增处方');
+const dialogTitle = ref('新增');
 const formData = reactive({
 	id: '',
 	patientName: '',
 	age: '',
 	gender: '1', // 1-男，2-女
-	prescriptionDate: '',
+	acupunctureDate: '',
 	diagnosis: '',
-	prescription: '', // 存储格式: "药材1 10g、药材2 15g、药材3 20g"
-	imageUrl: '',
-	remark: '', // 添加备注字段
-	pairs: 1  // 添加副数字段
+	acupoints: '',
+	remark: ''
 });
 
+
+
+// 编辑按钮点击
+const handleEdit = (row: any) => {
+	console.log(row,'row');
+	
+	dialogTitle.value = '编辑施针记录'
+	// 重置表单数据
+	Object.assign(formData, {
+		id: row.id,
+		patientName: row.patientName,
+		age: row.age,
+		gender: row.gender == '男'?'1':'2',
+		acupunctureDate: row.acupunctureDate,
+		diagnosis: row.diagnosis,
+		acupoints: row.acupoints,
+		remark: row.remark
+	})
+
+	if (row.acupoints) {
+		// 解析带单位的药方字符串
+		const curZhen = row.acupoints.split('、').map((item: string) => {
+			const [name, needleCountStr] = item.split(' ')
+
+			// 使用正则表达式匹配数字和非数字部分
+			const match = needleCountStr.match(/(\d+)([^\d]+)/)
+			
+			// 如果匹配成功，则分别获取数字(克数)和非数字(单位)部分
+			const needleCount = match ? parseInt(match[1]) : 1
+			
+			return {
+				id: String(Math.random()),
+				name,
+				needleCount
+			}
+		})
+		selectedZhen.value = curZhen
+	} else {
+		selectedZhen.value = []
+	}
+	
+	dialogVisible.value = true
+}
+
 const searchForm = reactive({
-	name: '',
+	patientName: '',
 	startTime: '',
 	endTime: ''
 });
@@ -346,12 +340,12 @@ const checkHttpProtocol = (url)=> {
 
 const formOptions = reactive<VxeFormProps<FormDataVO>>({
 	data: {
-		name: '',
+		patientName: '',
 		startTime: '',
 		endTime: ''
 	},
 	items: [
-		{ field: 'name', title: '姓名', span: 6, itemRender: { name: 'VxeInput', placeholder: '请输入姓名' } },
+		{ field: 'patientName', title: '姓名', span: 6, itemRender: { name: 'VxeInput', placeholder: '请输入姓名' } },
 		{ field: 'startTime', title: '开始时间', span: 6, itemRender: { name: 'VxeDatePicker' } },
 		{ 
 			field: 'endTime',
@@ -393,17 +387,17 @@ const formEvents: VxeFormListeners = {
 		console.log(e,'e');
 		
 		pageVO.currentPage = 1
-		searchForm.name = e.data.name
+		searchForm.patientName = e.data.patientName
 		searchForm.startTime = e.data.startTime
 		searchForm.endTime = e.data.endTime
-		getPrescript(searchForm)
+		getAcupunctures(searchForm)
 	},
 	reset() {
 		pageVO.currentPage = 1
-		searchForm.name = ''
+		searchForm.patientName = ''
 		searchForm.startTime = ''
 		searchForm.endTime = ''
-		getPrescript()
+		getAcupunctures()
 	},
 };
 
@@ -412,101 +406,56 @@ const tableData = ref<RowVO[]>([
 ]);
 
 // 获取中药材列表
-const getPrescript = (params = searchForm) => {
+const getAcupunctures = (params = searchForm) => {
 	let obj = {
 		page: pageVO.currentPage,
 		pageSize: pageVO.pageSize,
-		name: params.name,
+		patientName: params.patientName,
 		startTime: params.startTime,
 		endTime: params.endTime
 	}
-	usePrescriptionsApi().getPrescript(obj).then(res => {
+	useAcupointsApi().getAcupunctures(obj).then(res => {
 		tableData.value = res.data.list
 		pageVO.total = res.data.total
 	})
 }
 // 初始化中药材列表
-getPrescript()
+getAcupunctures()
 
 const updateMedicines = (id = '',name = '') => {
 	let obj = {
 		id: id,
 		name: name
 	}
-	usePrescriptionsApi().update(obj).then(res => {
+	useAcupointsApi().updateAcupuncture(obj).then(res => {
 		console.log(res,'res')
 	})
 }
 
 // 新增按钮点击
 const handleAdd = () => {
-	dialogTitle.value = '新增处方'
+	dialogTitle.value = '新增'
 	// 重置表单数据
 	Object.assign(formData, {
 		id: '',
 		patientName: '',
 		age: '',
 		gender: '1',
-		prescriptionDate: '',
+		acupunctureDate: '',
 		diagnosis: '',
-		prescription: '',
+		acupoints: '',
 		imageUrl: '',
 		remark: '',
 		pairs: 1  // 默认值为1
 	})
-	selectedMedicines.value = []
-	dialogVisible.value = true
-}
-
-// 编辑按钮点击
-const handleEdit = (row: any) => {
-	dialogTitle.value = '编辑处方'
-	// 重置表单数据
-	Object.assign(formData, {
-		id: row.id,
-		patientName: row.patientName,
-		age: row.age,
-		gender: row.gender == '男'?'1':'2',
-		prescriptionDate: row.prescriptionDate,
-		diagnosis: row.diagnosis,
-		prescription: row.prescription,
-		imageUrl: row.imageUrl,
-		remark: row.remark,
-		pairs: row.pairs || 1
-	})
-	
-	if (row.prescription) {
-		// 解析带单位的药方字符串
-		const medicines = row.prescription.split('、').map((item: string) => {
-			const [name, weightWithUnit] = item.split(' ')
-			
-			// 使用正则表达式匹配数字和非数字部分
-			const match = weightWithUnit.match(/(\d+)([^\d]+)/)
-			
-			// 如果匹配成功，则分别获取数字(克数)和非数字(单位)部分
-			const weight = match ? parseInt(match[1]) : 0
-			const unit = match ? match[2] : 'g' // 如果没有匹配到单位，默认为'g'
-			
-			return {
-				id: String(Math.random()),
-				name,
-				weight,
-				unit
-			}
-		})
-		selectedMedicines.value = medicines
-	} else {
-		selectedMedicines.value = []
-	}
-	
+	selectedZhen.value = []
 	dialogVisible.value = true
 }
 
 // 查看按钮点击
 const handleView = (row: any) => {
 	currentPrescription.value = {
-		...row,
-		imageUrl: row.imageUrl ?  checkHttpProtocol(row.imageUrl) ? row.imageUrl : baseUrl + row.imageUrl : ''
+		...row
 	}
 	prescriptionViewVisible.value = true
 }
@@ -522,10 +471,10 @@ const handleDelete = (row: any) => {
 	let obj = {
 		ids: Array.isArray(row.id) ?row.id:[row.id]
 	}
-	usePrescriptionsApi().delete(obj).then(res => {	
+	useAcupointsApi().deleteAcupuncture(obj).then(res => {	
 		ElMessage.success('删除成功');
 		pageVO.currentPage = 1
-		getPrescript()
+		getAcupunctures()
 	}).catch(err => {
 		ElMessage.error('删除失败');
 	})
@@ -537,29 +486,30 @@ const handleSubmit = () => {
 		ElMessage.warning('请输入患者姓名')
 		return
 	}
-	if (!selectedMedicines.value.length) {
-		ElMessage.warning('请选择药方')
+	if (!selectedZhen.value.length) {
+		ElMessage.warning('请选择穴位')
 		return
 	}
 	
 	// 更新处方字符串，包含单位信息
-	formData.prescription = selectedMedicines.value
-		.map(medicine => `${medicine.name} ${medicine.weight}${medicine.unit}`)
+	formData.acupoints = selectedZhen.value
+		.map(medicine => `${medicine.name} ${medicine.needleCount}针`)
 		.join('、')
 	
 	submitLoading.value = true
-	if(dialogTitle.value === '新增处方'){
+	if(dialogTitle.value === '新增'){
 		delete formData.id
 	}
+	
 	// 如果是编辑，需要传入 id
 	const api = formData.id ? 
-		usePrescriptionsApi().update({ data: formData }) : 
-		usePrescriptionsApi().create({ data: formData })
+		useAcupointsApi().updateAcupuncture({ data: formData }) : 
+		useAcupointsApi().createAcupuncture({ data: formData })
 		
 	api.then(() => {
 		ElMessage.success(formData.id ? '更新成功' : '新增成功')
 		dialogVisible.value = false
-		getPrescript()
+		getAcupunctures()
 	}).finally(() => {
 		submitLoading.value = false
 	})
@@ -605,7 +555,7 @@ const banchDelete = () => {
 const pageChange = ({ pageSize, currentPage }: { pageSize: number; currentPage: number }) => {
 	pageVO.currentPage = currentPage;
 	pageVO.pageSize = pageSize;
-	getPrescript()
+	getAcupunctures()
 };
 
 // 导入相关的状态
@@ -643,7 +593,7 @@ const handleImportSubmit = () => {
       const jsonData = XLSX.utils.sheet_to_json(worksheet)
 
       // 检查必要的列是否存在
-      const requiredColumns = ['姓名', '年龄', '性别', '开方时间', '临床诊断', '药方']
+      const requiredColumns = ['姓名', '年龄', '性别', '施针时间', '临床诊断', '药方']
       const hasAllColumns = requiredColumns.every(column => 
         jsonData.length > 0 && column in (jsonData[0] as any)
       )
@@ -658,19 +608,19 @@ const handleImportSubmit = () => {
         patientName: row['姓名'],
         age: row['年龄'],
         gender: row['性别'] === '男' ? '1' : '2',
-        prescriptionDate: row['开方时间'],
+        acupunctureDate: row['施针时间'],
         diagnosis: row['临床诊断'],
-        prescription: row['药方'],
+        acupoints: row['药方'],
         remark: row['备注'] || '' // 添加备注字段
       }))
 	
       // 创建处方
-      usePrescriptionsApi()
-        .create({ data: prescriptions })
+      useAcupointsApi()
+        .createAcupuncture({ data: prescriptions })
         .then(() => {
           ElMessage.success('导入成功')
           importDialogVisible.value = false
-          getPrescript()
+          getAcupunctures()
         })
         .catch(() => {
           ElMessage.error('导入失败')
@@ -699,16 +649,16 @@ const resetForm = () => {
 	formData.patientName = '';
 	formData.age = '';
 	formData.gender = '1';
-	formData.prescriptionDate = '';
+	formData.acupunctureDate = '';
 	formData.diagnosis = '';
-	formData.prescription = '';
+	formData.acupoints = '';
 	formData.imageUrl = '';
-	selectedMedicines.value = []
+	selectedZhen.value = []
 };
 
 // 添加相关数据
 const selectMedicineVisible = ref(false)
-const selectedMedicines = ref<Medicine[]>([])
+const selectedZhen = ref<Medicine[]>([])
 
 // 打开选择药方弹窗
 const openSelectMedicine = () => {
@@ -716,10 +666,9 @@ const openSelectMedicine = () => {
 }
 
 // 处理药方选择确认
-const handleMedicineConfirm = (medicines: Medicine[]) => {
-	selectedMedicines.value = medicines
-	// 更新表单数据中的药方字段，加入克数信息
-	formData.prescription = medicines.map(item => `${item.name} ${item.weight}${item.unit}`).join('、')
+const handleMedicineConfirm = (xueWei: Medicine[]) => {
+	selectedZhen.value = xueWei
+	formData.acupoints = xueWei.map(item => `${item.name} ${item.needleCount}`).join('、')
 }
 
 // 添加相关数据
@@ -729,9 +678,9 @@ const currentPrescription = ref({
 	patientName: '',
 	age: '',
 	gender: '',
-	prescriptionDate: '',
+	acupunctureDate: '',
 	diagnosis: '',
-	prescription: '',
+	acupoints: '',
 	imageUrl: ''
 })
 
@@ -754,10 +703,9 @@ const handleExport = () => {
     '姓名': item.patientName,
     '年龄': item.age,
     '性别': item.gender === '1' ? '男' : '女',
-    '开方时间': item.prescriptionDate,
+    '施针时间': item.acupunctureDate,
     '临床诊断': item.diagnosis,
-    '药方': item.prescription,
-    '副数': item.pairs || 1, // 添加副数字段，如果不存在则默认为1
+    '穴位': item.acupoints,
     '备注': item.remark || '' // 添加备注字段
   }))
 
@@ -770,15 +718,14 @@ const handleExport = () => {
     { width: 10 }, // 姓名
     { width: 8 },  // 年龄
     { width: 8 },  // 性别
-    { width: 15 }, // 开方时间
+    { width: 15 }, // 施针时间
     { width: 30 }, // 临床诊断
-    { width: 40 }, // 药方
-    { width: 8 },  // 副数
+    { width: 40 }, // 穴位
     { width: 20 }  // 备注
   ]
 
-  XLSX.utils.book_append_sheet(wb, ws, '处方列表')
-  XLSX.writeFile(wb, '处方数据.xlsx')
+  XLSX.utils.book_append_sheet(wb, ws, '施针管理列表')
+  XLSX.writeFile(wb, '施针管理列表数据.xlsx')
 }
 
 // 打印表格
@@ -786,7 +733,7 @@ const printTable = () => {
 	const $table = tableRef.value
 	if ($table) {
 		const opts = {
-			sheetName: '处方列表',
+			sheetName: '施针管理列表',
 			type: 'html',
 			mode: 'print',
 			original: false,
@@ -795,10 +742,9 @@ const printTable = () => {
 				{ field: 'patientName', title: '姓名' },
 				{ field: 'age', title: '年龄' },
 				{ field: 'gender', title: '性别' },
-				{ field: 'prescriptionDate', title: '开方时间' },
+				{ field: 'acupunctureDate', title: '施针时间' },
 				{ field: 'diagnosis', title: '临床诊断' },
-				{ field: 'prescription', title: '药方' },
-				{ field: 'pairs', title: '副数' }, // 添加副数列
+				{ field: 'acupoints', title: '穴位' },
 				{ field: 'remark', title: '备注' }
 			],
 			// 打印数据转换
@@ -806,10 +752,9 @@ const printTable = () => {
 				patientName: item.patientName,
 				age: item.age,
 				gender: item.gender === '1' ? '男' : '女',
-				prescriptionDate: item.prescriptionDate,
+				acupunctureDate: item.acupunctureDate,
 				diagnosis: item.diagnosis,
-				prescription: item.prescription,
-				pairs: item.pairs || 1, // 添加副数字段，如果不存在则默认为1
+				acupoints: item.acupoints,
 				remark: item.remark
 			})),
 			style: {
@@ -867,11 +812,10 @@ const printTable = () => {
 					td:nth-child(1), th:nth-child(1) { width: 10% !important; }  /* 姓名 */
 					td:nth-child(2), th:nth-child(2) { width: 8% !important; }   /* 年龄 */
 					td:nth-child(3), th:nth-child(3) { width: 8% !important; }   /* 性别 */
-					td:nth-child(4), th:nth-child(4) { width: 14% !important; }  /* 开方时间 */
+					td:nth-child(4), th:nth-child(4) { width: 14% !important; }  /* 施针时间 */
 					td:nth-child(5), th:nth-child(5) { width: 25% !important; }  /* 临床诊断 */
 					td:nth-child(6), th:nth-child(6) { width: 30% !important; }  /* 药方 */
-					td:nth-child(7), th:nth-child(7) { width: 5% !important; }   /* 副数 */
-					td:nth-child(8), th:nth-child(8) { width: 15% !important; }  /* 备注 */
+					td:nth-child(7), th:nth-child(7) { width: 15% !important; }  /* 备注 */
 				}
 			`
 		}
@@ -891,7 +835,7 @@ const handleExcelImport = (file: File) => {
       const jsonData = XLSX.utils.sheet_to_json(worksheet)
 
       // 检查必要的列
-      const requiredColumns = ['姓名', '年龄', '性别', '开方时间', '临床诊断', '药方']
+      const requiredColumns = ['姓名', '年龄', '性别', '施针时间', '临床诊断', '药方']
       const hasAllColumns = requiredColumns.every(column => 
         jsonData.length > 0 && column in (jsonData[0] as any)
       )
@@ -906,18 +850,18 @@ const handleExcelImport = (file: File) => {
         patientName: row['姓名'],
         age: row['年龄'],
         gender: row['性别'] === '男' ? '1' : '2',
-        prescriptionDate: row['开方时间'],
+        acupunctureDate: row['施针时间'],
         diagnosis: row['临床诊断'],
-        prescription: row['药方'],
+        acupoints: row['药方'],
         remark: row['备注'] || '' // 添加备注字段
       }))
 
       // 创建处方
-      usePrescriptionsApi()
-        .create({ data: prescriptions })
+      useAcupointsApi()
+        .createAcupuncture({ data: prescriptions })
         .then(() => {
           ElMessage.success('导入成功')
-          getPrescript()
+          getAcupunctures()
         })
         .catch(() => {
           ElMessage.error('导入失败')
@@ -1002,7 +946,7 @@ const handleWeightConfirm = () => {
 	cursor: pointer;
 }
 
-.prescription-uploader {
+.acupoints-uploader {
 	:deep(.el-upload) {
 		border: 1px dashed var(--el-border-color);
 		border-radius: 6px;
@@ -1049,7 +993,7 @@ const handleWeightConfirm = () => {
 	}
 }
 
-.prescription-uploader-icon {
+.acupoints-uploader-icon {
 	font-size: 28px;
 	color: #8c939d;
 	width: 100px;
@@ -1060,14 +1004,14 @@ const handleWeightConfirm = () => {
 	justify-content: center;
 }
 
-.prescription-image {
+.acupoints-image {
 	width: 100px;
 	height: 100px;
 	display: block;
 	object-fit: cover;
 }
 
-.prescription-display {
+.acupoints-display {
 	.medicine-list {
 		margin-bottom: 15px;
 		
