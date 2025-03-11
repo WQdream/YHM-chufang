@@ -9,7 +9,10 @@
     <div class="prescription-view">
       <!-- 打印按钮 -->
       <div class="action-bar">
-        <el-button type="primary" @click="handlePrint">
+        <el-button type="primary" size="mini" @click="handleCopy">
+          <el-icon><CopyDocument /></el-icon>复制处方
+        </el-button>
+        <el-button type="primary" size="mini" @click="handlePrint">
           <el-icon><Printer /></el-icon>打印处方
         </el-button>
       </div>
@@ -96,7 +99,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Printer } from '@element-plus/icons-vue'
+import { Printer, CopyDocument } from '@element-plus/icons-vue'
 
 interface PrescriptionData {
   id: string
@@ -178,6 +181,19 @@ const copyText = (text: string) => {
     // 移除临时文本域
     document.body.removeChild(textarea)
   }
+}
+// 复制处方
+const handleCopy = () => {
+  if (!prescriptionMedicines.value.length) {
+    ElMessage.warning('暂无药材信息可复制')
+    return
+  }
+  // 创建一个新数组，将每个药材的重量乘以副数
+  const medicinesWithPairs = prescriptionMedicines.value.map(medicine => ({
+    ...medicine,
+    weight: medicine.weight * Number(props.prescriptionData.pairs)
+  }))
+  copyText(JSON.stringify(medicinesWithPairs))
 }
 
 // 处理打印
@@ -393,4 +409,4 @@ const handlePrint = () => {
     border: 1px solid #dcdfe6 !important;
   }
 }
-</style> 
+</style>

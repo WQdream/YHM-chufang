@@ -53,18 +53,24 @@
 						
 						<vxe-column field="active" title="操作" width="200" fixed="right" align="center">
 							<template #default="{ row }">
+							<div class="flex items-center justify-center space-x-2">
 								<el-button type="primary" size="small" @click="handleView(row)">查看</el-button>
-								<el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-								<el-popconfirm
-									title="确定要删除这条数据吗？"
-									confirm-button-text="确定"
-									cancel-button-text="取消"
-									@confirm="handleDelete(row)"
-								>
-									<template #reference>
-										<el-button type="danger" size="small">删除</el-button>
+								<el-dropdown trigger="click" @command="(command) => handleRowCommand(command, row)" style="margin-left: 15px">
+									<el-button type="primary" size="small">
+										更多<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+									</el-button>
+									<template #dropdown>
+										<el-dropdown-menu>
+											<el-dropdown-item command="edit">编辑
+											</el-dropdown-item>
+											<el-dropdown-item command="copy">复用
+											</el-dropdown-item>
+											<el-dropdown-item command="delete" divided>删除
+											</el-dropdown-item>
+										</el-dropdown-menu>
 									</template>
-								</el-popconfirm>
+								</el-dropdown>
+							</div>
 							</template>
 						</vxe-column>
 					</vxe-table>
@@ -460,15 +466,23 @@ const handlePrescript = (row: RowVO) => {
 
 // 删除按钮点击
 const handleDelete = (row: any) => {
-	let obj = {
-		ids: Array.isArray(row.id) ?row.id:[row.id]
-	}
-	useAcupointsApi().deleteAcupuncture(obj).then(res => {	
-		ElMessage.success('删除成功');
-		pageVO.currentPage = 1
-		getAcupunctures()
-	}).catch(err => {
-		ElMessage.error('删除失败');
+	ElMessageBox.confirm('确定要删除这条数据吗？', '提示', {
+		confirmButtonText: '确定',
+		cancelButtonText: '取消',
+		type: 'warning',
+	}).then(() => {
+		let obj = {
+			ids: Array.isArray(row.id) ? row.id : [row.id]
+		}
+		useAcupointsApi().deleteAcupuncture(obj).then(res => {
+			ElMessage.success('删除成功');
+			pageVO.currentPage = 1
+			getAcupunctures()
+		}).catch(err => {
+			ElMessage.error('删除失败');
+		})
+	}).catch(() => {
+		ElMessage.info('已取消删除操作')
 	})
 };
 
@@ -676,49 +690,44 @@ const currentPrescription = ref({
 	imageUrl: ''
 })
 
-// 处理下拉菜单命令
-const handleCommand = (command: string) => {
-	switch (command) {
-		case 'export':
-			handleExport()
-			break
-		case 'print':
-			printTable()
-			break
-	}
-}
-
-// 导出Excel
-const handleExport = () => {
-  // 准备导出数据
-  const exportData = tableData.value.map(item => ({
-    '姓名': item.patientName,
-    '年龄': item.age,
-    '性别': item.gender === '1' ? '男' : '女',
-    '施针时间': item.acupunctureDate,
-    '临床诊断': item.diagnosis,
-    '穴位': item.acupoints,
-    '备注': item.remark || '' // 添加备注字段
-  }))
-
-  // 创建工作簿
-  const wb = XLSX.utils.book_new()
-  const ws = XLSX.utils.json_to_sheet(exportData)
-
-  // 设置列宽
-  ws['!cols'] = [
-    { width: 10 }, // 姓名
-    { width: 8 },  // 年龄
-    { width: 8 },  // 性别
-    { width: 15 }, // 施针时间
-    { width: 30 }, // 临床诊断
-    { width: 40 }, // 穴位
-    { width: 20 }  // 备注
-  ]
-
-  XLSX.utils.book_append_sheet(wb, ws, '施针管理列表')
-  XLSX.writeFile(wb, '施针管理列表数据.xlsx')
-}
+// 处理行操作按钮
+const handleRowCommand = (command: string, row: any) => {
+  switch (command) {
+    case 'edit':
+      handleEdit(row);
+      break;
+    case 'copy':
+      dialogTitle.value = '复用'
+      Object.assign(formData, {
+        id: '',
+        patientName: row.patientName,
+        age: row.age,
+        gender: row.gender == '男'?'1':'2',
+        acupunctureDate: row.acupunctureDate,
+        diagnosis: row.diagnosis,
+        acupoints: row.acupoints,
+        remark: row.remark
+      })
+	  delete formData.id
+      if (row.acupoints) {
+        const curZhen = row.acupoints.split('、').map((item: string) => {
+          const [name] = item.split(' ')
+          return {
+            id: String(Math.random()),
+            name
+          }
+        })
+        selectedZhen.value = curZhen
+      } else {
+        selectedZhen.value = []
+      }
+      dialogVisible.value = true
+      break;
+    case 'delete':
+      handleDelete(row);
+      break;
+  }
+};
 
 // 打印表格
 const printTable = () => {

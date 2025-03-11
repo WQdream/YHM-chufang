@@ -68,20 +68,23 @@
 							</template>
 						</vxe-column>
 						
-						<vxe-column field="active" title="操作" width="200" fixed="right" align="center">
+						<vxe-column field="active" title="操作" width="180" fixed="right" align="center">
 							<template #default="{ row }">
-								<el-button type="primary" size="small" @click="handleView(row)">查看</el-button>
-								<el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-								<el-popconfirm
-									title="确定要删除这条数据吗？"
-									confirm-button-text="确定"
-									cancel-button-text="取消"
-									@confirm="handleDelete(row)"
-								>
-									<template #reference>
-										<el-button type="danger" size="small">删除</el-button>
-									</template>
-								</el-popconfirm>
+								<div class="flex items-center justify-center space-x-2">
+									<el-button type="primary" size="small" @click="handleView(row)">查看</el-button>
+									<el-dropdown trigger="click" style="margin-left: 15px">
+										<el-button type="primary" size="small">
+											更多<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+										</el-button>
+										<template #dropdown>
+											<el-dropdown-menu>
+												<el-dropdown-item @click="handleEdit(row)">编辑</el-dropdown-item>
+												<el-dropdown-item @click="handleReuse(row)">复用</el-dropdown-item>
+												<el-dropdown-item divided @click="handleDelete(row)" class="text-danger">删除</el-dropdown-item>
+											</el-dropdown-menu>
+										</template>
+									</el-dropdown>
+								</div>
 							</template>
 						</vxe-column>
 					</vxe-table>
@@ -325,7 +328,7 @@ const formData = reactive({
 	prescription: '', // 存储格式: "药材1 10g、药材2 15g、药材3 20g"
 	imageUrl: '',
 	remark: '', // 添加备注字段
-	pairs: 1  // 添加副数字段
+	pairs: 7  // 添加副数字段
 });
 
 const searchForm = reactive({
@@ -452,7 +455,7 @@ const handleAdd = () => {
 		prescription: '',
 		imageUrl: '',
 		remark: '',
-		pairs: 1  // 默认值为1
+		pairs: 7  // 默认值为7
 	})
 	selectedMedicines.value = []
 	dialogVisible.value = true
@@ -472,7 +475,7 @@ const handleEdit = (row: any) => {
 		prescription: row.prescription,
 		imageUrl: row.imageUrl,
 		remark: row.remark,
-		pairs: row.pairs || 1
+		pairs: row.pairs || 7
 	})
 	
 	if (row.prescription) {
@@ -519,15 +522,23 @@ const handlePrescript = (row: RowVO) => {
 
 // 删除按钮点击
 const handleDelete = (row: any) => {
-	let obj = {
-		ids: Array.isArray(row.id) ?row.id:[row.id]
-	}
-	usePrescriptionsApi().delete(obj).then(res => {	
-		ElMessage.success('删除成功');
-		pageVO.currentPage = 1
-		getPrescript()
-	}).catch(err => {
-		ElMessage.error('删除失败');
+	ElMessageBox.confirm('确认要删除该处方记录吗？', '提示', {
+		confirmButtonText: '确定',
+		cancelButtonText: '取消',
+		type: 'warning',
+	}).then(() => {
+		let obj = {
+			ids: Array.isArray(row.id) ? row.id : [row.id]
+		}
+		usePrescriptionsApi().delete(obj).then(res => {	
+			ElMessage.success('删除成功');
+			pageVO.currentPage = 1
+			getPrescript()
+		}).catch(err => {
+			ElMessage.error('删除失败');
+		})
+	}).catch(() => {
+		ElMessage.info('已取消删除')
 	})
 };
 
@@ -757,7 +768,7 @@ const handleExport = () => {
     '开方时间': item.prescriptionDate,
     '临床诊断': item.diagnosis,
     '药方': item.prescription,
-    '副数': item.pairs || 1, // 添加副数字段，如果不存在则默认为1
+    '副数': item.pairs || 7, // 添加副数字段，如果不存在则默认为7
     '备注': item.remark || '' // 添加备注字段
   }))
 
@@ -809,7 +820,7 @@ const printTable = () => {
 				prescriptionDate: item.prescriptionDate,
 				diagnosis: item.diagnosis,
 				prescription: item.prescription,
-				pairs: item.pairs || 1, // 添加副数字段，如果不存在则默认为1
+				pairs: item.pairs || 7, // 添加副数字段，如果不存在则默认为7
 				remark: item.remark
 			})),
 			style: {
@@ -956,6 +967,49 @@ const handleWeightConfirm = () => {
     currentEditMedicine.value.weight = tempWeight.value
   }
   editWeightVisible.value = false
+}
+// 复用按钮点击
+const handleReuse = (row: any) => {
+	dialogTitle.value = '复用处方'
+	// 复制表单数据，包含患者信息
+	Object.assign(formData, {
+		id: '', // 新建处方，不需要id
+		patientName: row.patientName,
+		age: row.age,
+		gender: row.gender == '男'?'1':'2',
+		prescriptionDate: row.prescriptionDate, // 保留原处方的开方时间
+		diagnosis: row.diagnosis,
+		prescription: row.prescription,
+		imageUrl: '',
+		remark: row.remark,
+		pairs: row.pairs || 7
+	})
+	delete formData.id
+	if (row.prescription) {
+		// 解析带单位的药方字符串
+		const medicines = row.prescription.split('、').map((item: string) => {
+			const [name, weightWithUnit] = item.split(' ')
+			
+			// 使用正则表达式匹配数字和非数字部分
+			const match = weightWithUnit.match(/(\d+)([^\d]+)/)
+			
+			// 如果匹配成功，则分别获取数字(克数)和非数字(单位)部分
+			const weight = match ? parseInt(match[1]) : 0
+			const unit = match ? match[2] : 'g' // 如果没有匹配到单位，默认为'g'
+			
+			return {
+				id: String(Math.random()),
+				name,
+				weight,
+				unit
+			}
+		})
+		selectedMedicines.value = medicines
+	} else {
+		selectedMedicines.value = []
+	}
+	
+	dialogVisible.value = true
 }
 </script>
 
