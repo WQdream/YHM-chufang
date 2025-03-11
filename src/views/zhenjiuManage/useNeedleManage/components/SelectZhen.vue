@@ -55,14 +55,6 @@
             <template v-if="selectedZhen.length > 0">
               <div v-for="item in selectedZhen" :key="item.id" class="selected-item">
                 <span class="medicine-name">{{ item.name }}</span>
-                <el-input-number
-                  v-model="item.needleCount"
-                  :min="1"
-                  :max="99"
-                  size="small"
-                  class="needle-count"
-                  controls-position="right"
-                />
                 <el-button type="danger" link @click="removeSelected(item.id)">
                   <el-icon><Delete /></el-icon>
                 </el-button>
@@ -92,7 +84,6 @@ import { useAcupointsApi } from '/@/api/zhenjiuManage/index'
 interface Medicine {
   id: string
   name: string
-  needleCount?: number
 }
 
 const props = defineProps<{
@@ -133,8 +124,7 @@ const getMedicineList = (keyword = '') => {
     .then((res) => {
       medicineList.value = res.data.list.map(item => ({
         id: item.id,
-        name: item.name,
-        needleCount: 1
+        name: item.name
       }))
 
       if(medicineList.value.length == 1){
@@ -158,8 +148,7 @@ const toggleSelect = (medicine: Medicine) => {
   if (index === -1) {
     selectedZhen.value.push({
       id: medicine.id,
-      name: medicine.name,
-      needleCount: 1
+      name: medicine.name
     })
   } else {
     selectedZhen.value.splice(index, 1)
@@ -291,6 +280,7 @@ const isSelected = (name: string): boolean => {
           flex: 1;
           font-size: 14px;
           color: var(--el-text-color-primary);
+          text-align: center;
         }
 
         .needle-count {
@@ -299,9 +289,6 @@ const isSelected = (name: string): boolean => {
         }
 
         .el-button {
-          opacity: 0;
-          transform: translateX(10px);
-          transition: all 0.3s ease;
           padding: 4px 8px;
           margin-left: 12px;
 

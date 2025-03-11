@@ -76,7 +76,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin'],
-					icon: 'iconfont icon-xitongshezhi',
+					icon: 'iconfont icon-chazhaobiaodanliebiao',
 				},
 				children: [
 					{
@@ -91,7 +91,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 							isAffix: false,
 							isIframe: false,
 							roles: ['admin'],
-							icon: 'iconfont icon-caidan',
+							icon: 'iconfont icon-gongju',
 						},
 					},
 					{
@@ -106,7 +106,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 							isAffix: false,
 							isIframe: false,
 							roles: ['admin'],
-							icon: 'iconfont icon-caidan',
+							icon: 'iconfont icon-yangan',
 						},
 					},
 				],
@@ -124,7 +124,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin'],
-					icon: 'iconfont icon-xitongshezhi',
+					icon: 'ele-DataLine',
 				},
 				children: [
 					{
@@ -139,7 +139,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 							isAffix: false,
 							isIframe: false,
 							roles: ['admin'],
-							icon: 'iconfont icon-caidan',
+							icon: 'ele-Compass',
 						},
 					},
 					{
@@ -154,7 +154,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 							isAffix: false,
 							isIframe: false,
 							roles: ['admin'],
-							icon: 'iconfont icon-caidan',
+							icon: 'ele-HelpFilled',
 						},
 					},
 				],
@@ -202,7 +202,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 							isAffix: false,
 							isIframe: true,
 							roles: ['admin'],
-							icon: 'iconfont icon-neiqianshujuchucun',
+							icon: 'iconfont icon-shouye_dongtaihui',
 						},
 					},
 					{
@@ -217,7 +217,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 							isAffix: false,
 							isIframe: true,
 							roles: ['admin'],
-							icon: 'iconfont icon-neiqianshujuchucun',
+							icon: 'iconfont icon-AIshiyanshi',
 						},
 					},
 					{
@@ -232,7 +232,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 							isAffix: false,
 							isIframe: true,
 							roles: ['admin'],
-							icon: 'iconfont icon-neiqianshujuchucun',
+							icon: 'iconfont icon-AIshiyanshi',
 						},
 					},
 				],

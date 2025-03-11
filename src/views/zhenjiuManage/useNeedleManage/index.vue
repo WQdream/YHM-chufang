@@ -144,7 +144,7 @@
 								type="success"
 								effect="light"
 							>
-								{{ medicine.name }} {{ medicine.needleCount }}针
+								{{ medicine.name }}
 							</el-tag>
 						</div>
 						<div v-else class="empty-text">暂未穴位</div>
@@ -248,7 +248,6 @@ interface RowVO {
 interface Medicine {
 	id: string;
 	name: string;
-	needleCount: number; // 针数
 }
 
 const tableRef = ref<VxeTableInstance<RowVO>>()
@@ -300,18 +299,11 @@ const handleEdit = (row: any) => {
 	if (row.acupoints) {
 		// 解析带单位的药方字符串
 		const curZhen = row.acupoints.split('、').map((item: string) => {
-			const [name, needleCountStr] = item.split(' ')
-
-			// 使用正则表达式匹配数字和非数字部分
-			const match = needleCountStr.match(/(\d+)([^\d]+)/)
-			
-			// 如果匹配成功，则分别获取数字(克数)和非数字(单位)部分
-			const needleCount = match ? parseInt(match[1]) : 1
+			const [name] = item.split(' ')
 			
 			return {
 				id: String(Math.random()),
-				name,
-				needleCount
+				name
 			}
 		})
 		selectedZhen.value = curZhen
@@ -493,7 +485,7 @@ const handleSubmit = () => {
 	
 	// 更新处方字符串，包含单位信息
 	formData.acupoints = selectedZhen.value
-		.map(medicine => `${medicine.name} ${medicine.needleCount}针`)
+		.map(medicine => `${medicine.name}`)
 		.join('、')
 	
 	submitLoading.value = true
@@ -668,7 +660,7 @@ const openSelectMedicine = () => {
 // 处理药方选择确认
 const handleMedicineConfirm = (xueWei: Medicine[]) => {
 	selectedZhen.value = xueWei
-	formData.acupoints = xueWei.map(item => `${item.name} ${item.needleCount}`).join('、')
+	formData.acupoints = xueWei.map(item => `${item.name}`).join('、')
 }
 
 // 添加相关数据

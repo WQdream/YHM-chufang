@@ -52,7 +52,7 @@
             <div class="medicine-list">
               <template v-for="(medicine, index) in prescriptionMedicines" :key="medicine.id">
                 <span class="medicine-item">
-                  {{ medicine.name }} {{ medicine.needleCount }}针
+                  {{ medicine.name }}
                 </span>
                 <span v-if="index !== prescriptionMedicines.length - 1" class="separator">、</span>
               </template>
@@ -90,7 +90,6 @@ interface AcupointsData {
 interface Medicine {
   id: string
   name: string
-  needleCount: number
 }
 
 const props = defineProps<{
@@ -113,16 +112,11 @@ watch(() => props.modelValue, (val) => {
     // 将处方字符串转换为药材数组，格式为：药材1 10g、药材2 15mg
     const zhen = props.acupointsData.acupoints.split('、')
     prescriptionMedicines.value = zhen.map((item, index) => {
-      const [name, countStr] = item.split(' ')
+      const [name] = item.split(' ')
 			// 使用正则表达式匹配数字和非数字部分
-			const match = countStr.match(/(\d+)([^\d]+)/)
-			
-			// 如果匹配成功，则分别获取数字(克数)和非数字(单位)部分
-			const needleCount = match ? parseInt(match[1]) : 1
       return {
         id: String(index),
-        name,
-        needleCount
+        name
       }
     })
   }
