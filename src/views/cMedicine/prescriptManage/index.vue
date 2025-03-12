@@ -33,25 +33,26 @@
 						stripe 
 						border 
 						show-overflow 
+						:auto-resize="true"
 						:data="tableData"
 						:height="'100%'"
 						:row-config="{ height: 80 }"
 					>
 						<vxe-column type="checkbox" width="60"></vxe-column>
-						<vxe-column field="seq" type="seq" width="70"></vxe-column>
-						<vxe-column field="patientName" title="姓名"></vxe-column>
-						<vxe-column field="age" title="年龄">
+						<vxe-column field="seq" type="seq" :width='isMobile?"17%":"70"'></vxe-column>
+						<vxe-column field="patientName" :fixed="ifFixed?'left':''" :width='isMobile?"30%":""' title="姓名"></vxe-column>
+						<vxe-column field="age" title="年龄" :width='isMobile?"30%":""'>
 							<template #default="{ row }">
 								{{ row.age == 0?'保密': row.age}}
 							</template>
 						</vxe-column>
-						<vxe-column field="gender" title="性别"></vxe-column>
-						<vxe-column field="prescriptionDate" title="开方时间"></vxe-column>
-						<vxe-column field="diagnosis" title="临床诊断"></vxe-column>
-						<vxe-column field="prescription" title="药方"></vxe-column>
-						<vxe-column field="pairs" title="副数"></vxe-column>
+						<vxe-column field="gender" title="性别" :width='isMobile?"30%":""'></vxe-column>
+						<vxe-column field="prescriptionDate" title="开方时间" :width='isMobile?"30%":""'></vxe-column>
+						<vxe-column field="diagnosis" title="临床诊断" :width='isMobile?"30%":""'></vxe-column>
+						<vxe-column field="prescription" title="药方" :width='isMobile?"30%":""'></vxe-column>
+						<vxe-column field="pairs" title="副数" :width='isMobile?"30%":""'></vxe-column>
 					
-						<vxe-column field="imageUrl" align="center" title="药方图片">
+						<vxe-column field="imageUrl" align="center" title="药方图片" :width='isMobile?"30%":""'>
 							<template #default="{ row }">
 								<div class="image-cell">
 									<el-image 
@@ -68,7 +69,7 @@
 							</template>
 						</vxe-column>
 						
-						<vxe-column field="active" title="操作" width="180" fixed="right" align="center">
+						<vxe-column field="active" title="操作" width="180" align="center">
 							<template #default="{ row }">
 								<div class="flex items-center justify-center space-x-2">
 									<el-button type="primary" size="small" @click="handleView(row)">查看</el-button>
@@ -302,6 +303,9 @@ interface Medicine {
 	unit: string; // 添加单位字段
 }
 
+const isMobile = ref(window.innerWidth < 768)
+let ifFixed = ref(false)
+isMobile.value && (ifFixed.value = true)
 const tableRef = ref<VxeTableInstance<RowVO>>()
 const submitLoading = ref(false)
 // 分页数据
@@ -355,17 +359,19 @@ const formOptions = reactive<VxeFormProps<FormDataVO>>({
 	},
 	items: [
 		{ field: 'name', title: '姓名', span: 6, itemRender: { name: 'VxeInput', placeholder: '请输入姓名' } },
-		{ field: 'startTime', title: '开始时间', span: 6, itemRender: { name: 'VxeDatePicker' } },
+		{ field: 'startTime', title: '开始时间', span: 6, folding: true, itemRender: { name: 'VxeDatePicker' } },
 		{ 
 			field: 'endTime',
 			title: '至',
 			span: 6,
+			folding: true,
 			itemRender: {
 				name: 'VxeDatePicker',
 			}
 		},
 		{
 			span: 6,
+			collapseNode: true,
 			align: 'left',
 			itemRender: {
 				name: 'VxeButtonGroup',

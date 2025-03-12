@@ -24,8 +24,8 @@
 					>
 						<vxe-column type="checkbox" width="60"></vxe-column>
 						<vxe-column field="seq" type="seq" width="70"></vxe-column>
-						<vxe-column field="name" title="穴位名称"></vxe-column>
-						<vxe-column field="active" title="操作" width="200" fixed="right" align="center">
+						<vxe-column field="name" title="穴位名称" :width='isMobile?"30%":""'></vxe-column>
+						<vxe-column field="active" title="操作" width="200" align="center">
 							<template #default="{ row }">
 								<el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
 								<el-popconfirm
@@ -130,7 +130,7 @@ interface RowVO {
 	id: string;
 	name: string;
 }
-
+const isMobile = ref(window.innerWidth < 768)
 const tableRef = ref<VxeTableInstance<RowVO>>()
 const submitLoading = ref(false)
 // 分页数据

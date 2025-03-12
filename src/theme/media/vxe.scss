@@ -1,0 +1,35 @@
+@import './index.scss';
+
+/* 页面宽度小于576px
+------------------------------- */
+@media screen and (max-width: $xs) {
+	.vxe-form {
+		.vxe-form--item {
+			width: 100% !important;
+			margin-right: 0 !important;
+			margin-bottom: 10px !important;
+			
+			.vxe-form--item-content {
+				width: 100% !important;
+				
+				.vxe-input,
+				.vxe-select {
+					width: 100% !important;
+				}
+			}
+		}
+	}
+}
+
+/* 页面宽度小于768px
+------------------------------- */
+@media screen and (max-width: $sm) {
+	.vxe-form {
+		flex-direction: column !important;
+		
+		.vxe-form--item {
+			width: 100% !important;
+			margin-right: 0 !important;
+		}
+	}
+}

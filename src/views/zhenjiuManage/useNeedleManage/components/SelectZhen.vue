@@ -127,7 +127,7 @@ const getMedicineList = (keyword = '') => {
         name: item.name
       }))
 
-      if(medicineList.value.length == 1){
+      if(medicineList.value.length == 1 && !selectedZhen.value.some(item => item.name === medicineList.value[0].name)){
         selectedZhen.value.push({
           id: medicineList.value[0].id,
           name: medicineList.value[0].name
@@ -201,16 +201,29 @@ const isSelected = (name: string): boolean => {
     display: flex;
     gap: 20px;
 
+    @media screen and (max-width: 768px) {
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .medicine-list {
       flex: 1;
       border: 1px solid var(--el-border-color-lighter);
       border-radius: 4px;
 
+      @media screen and (max-width: 768px) {
+        height: 300px;
+      }
+
       .medicine-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        grid-template-columns: repeat(6, 1fr);
         gap: 10px;
         padding: 10px;
+
+        @media screen and (max-width: 768px) {
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
 
         .medicine-item {
           height: 32px;
@@ -240,40 +253,30 @@ const isSelected = (name: string): boolean => {
     .selected-list {
       width: 300px;
       border: 1px solid var(--el-border-color-lighter);
-      border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      border-radius: 4px;
+
+      @media screen and (max-width: 768px) {
+        width: 100%;
+        height: 300px;
+      }
 
       .selected-header {
-        padding: 12px 16px;
+        padding: 10px;
         border-bottom: 1px solid var(--el-border-color-lighter);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: var(--el-fill-color-light);
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
-
-        span {
-          font-weight: 500;
-          color: var(--el-text-color-primary);
-        }
       }
 
       .selected-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 16px;
+        padding: 10px;
         border-bottom: 1px solid var(--el-border-color-lighter);
-        transition: all 0.3s ease;
         
         &:hover {
-          background-color: var(--el-color-primary-light-9);
-
-          .el-button {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          background-color: var(--el-fill-color-light);
         }
         
         .medicine-name {
@@ -282,28 +285,26 @@ const isSelected = (name: string): boolean => {
           color: var(--el-text-color-primary);
           text-align: center;
         }
+        
+        .weight-input {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          
+          :deep(.el-input-number) {
+            width: 100px;
 
-        .needle-count {
-          width: 90px;
-          margin: 0 8px;
-        }
-
-        .el-button {
-          padding: 4px 8px;
-          margin-left: 12px;
-
-          &:hover {
-            color: var(--el-color-danger) !important;
-            background-color: var(--el-color-danger-light-9);
+            @media screen and (max-width: 768px) {
+              width: 80px;
+            }
           }
         }
       }
 
       .empty-text {
-        padding: 32px 16px;
+        padding: 20px;
         text-align: center;
         color: var(--el-text-color-secondary);
-        font-size: 14px;
       }
     }
   }

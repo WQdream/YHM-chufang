@@ -147,7 +147,7 @@ const getMedicineList = (keyword = '') => {
         unit: item.unit || 'g'
       }))
 
-      if(medicineList.value.length == 1){
+      if(medicineList.value.length == 1 && !selectedMedicines.value.some(item => item.name === medicineList.value[0].name)){
         selectedMedicines.value.push({
           id: medicineList.value[0].id,
           name: medicineList.value[0].name,
@@ -239,16 +239,29 @@ const handleWeightChange = (value: number, medicine: Medicine) => {
     display: flex;
     gap: 20px;
 
+    @media screen and (max-width: 768px) {
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .medicine-list {
       flex: 1;
       border: 1px solid var(--el-border-color-lighter);
       border-radius: 4px;
 
+      @media screen and (max-width: 768px) {
+        height: 300px;
+      }
+
       .medicine-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        grid-template-columns: repeat(6, 1fr);
         gap: 10px;
         padding: 10px;
+
+        @media screen and (max-width: 768px) {
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
 
         .medicine-item {
           height: 32px;
@@ -279,6 +292,11 @@ const handleWeightChange = (value: number, medicine: Medicine) => {
       width: 300px;
       border: 1px solid var(--el-border-color-lighter);
       border-radius: 4px;
+
+      @media screen and (max-width: 768px) {
+        width: 100%;
+        height: 300px;
+      }
 
       .selected-header {
         padding: 10px;
@@ -311,6 +329,10 @@ const handleWeightChange = (value: number, medicine: Medicine) => {
           
           :deep(.el-input-number) {
             width: 100px;
+
+            @media screen and (max-width: 768px) {
+              width: 80px;
+            }
           }
         }
       }
@@ -323,4 +345,4 @@ const handleWeightChange = (value: number, medicine: Medicine) => {
     }
   }
 }
-</style> 
+</style>
