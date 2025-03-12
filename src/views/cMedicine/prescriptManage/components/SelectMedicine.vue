@@ -2,7 +2,7 @@
   <el-dialog
     title="选择药方"
     v-model="visible"
-    width="70%"
+    width="60%"
     :close-on-click-modal="false"
     @closed="handleClose"
   >
@@ -28,7 +28,7 @@
       <!-- 主体区域 -->
       <div class="content-area">
         <!-- 左侧药材列表 -->
-        <div class="medicine-list">
+        <div class="medicine-list" ref="medicineListRef">
           <el-scrollbar height="400px">
             <div class="medicine-grid">
               <div
@@ -70,6 +70,18 @@
                     <el-option label="片" value="片" />
                     <el-option label="枚" value="枚" />
                   </el-select>
+                  <el-dropdown @command="(command) => handleAddCommand(command, item)" trigger="click">
+                    <el-button type="primary" link>
+                      <el-icon><Plus /></el-icon>
+                    </el-button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="addAbove">向上添加</el-dropdown-item>
+                        <el-dropdown-item command="replace">替换</el-dropdown-item>
+                        <el-dropdown-item command="addBelow">向下添加</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
                   <el-button type="danger" link @click="removeSelected(item.id)">
                     <el-icon><Delete /></el-icon>
                   </el-button>
@@ -93,8 +105,8 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Search, Delete } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { Search, Delete, Plus } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useChineseMedicineApi } from '/@/api/chineseMedicine/index'
 
 interface Medicine {
@@ -118,6 +130,9 @@ const visible = ref(false)
 const searchKeyword = ref('')
 const medicineList = ref<Medicine[]>([])
 const selectedMedicines = ref<Medicine[]>([])
+const pendingAdd = ref<{ mode: string; index: number } | null>(null)
+const isHighlightActive = ref(false)
+const medicineListRef = ref<HTMLElement | null>(null)
 
 // 监听弹窗显示状态
 watch(() => props.modelValue, (val) => {
@@ -127,12 +142,31 @@ watch(() => props.modelValue, (val) => {
     getMedicineList()
     // 确保使用新的数组引用，避免直接修改 props
     selectedMedicines.value = props.defaultSelected ? [...props.defaultSelected] : []
+    // 重置pendingAdd状态
+    pendingAdd.value = null
+    // 重置闪烁状态
+    isHighlightActive.value = false
   }
 })
 
 // 监听内部显示状态
 watch(() => visible.value, (val) => {
   emit('update:modelValue', val)
+})
+
+// 监听pendingAdd状态变化
+watch(() => pendingAdd.value, (val) => {
+  const medicineList = document.querySelector('.medicine-list')
+  if (medicineList) {
+    if (val) {
+      medicineList.classList.add('highlight-border')
+      isHighlightActive.value = true
+      
+    } else if (!val && isHighlightActive.value) {
+      medicineList.classList.remove('highlight-border')
+      isHighlightActive.value = false
+    }
+  }
 })
 
 // 获取药材列表
@@ -147,13 +181,28 @@ const getMedicineList = (keyword = '') => {
         unit: item.unit || 'g'
       }))
 
-      if(medicineList.value.length == 1 && !selectedMedicines.value.some(item => item.name === medicineList.value[0].name)){
-        selectedMedicines.value.push({
-          id: medicineList.value[0].id,
-          name: medicineList.value[0].name,
+      if(medicineList.value.length == 1 && pendingAdd.value) {
+        const medicine = medicineList.value[0];
+        const { mode, index } = pendingAdd.value;
+        const newMedicine = {
+          id: medicine.id,
+          name: medicine.name,
           weight: 15,
-          unit: medicineList.value[0].unit || 'g'
-        })
+          unit: medicine.unit || 'g'
+        };
+
+        switch (mode) {
+          case 'addAbove':
+            selectedMedicines.value.splice(index, 0, newMedicine);
+            break;
+          case 'replace':
+            selectedMedicines.value.splice(index, 1, newMedicine);
+            break;
+          case 'addBelow':
+            selectedMedicines.value.splice(index + 1, 0, newMedicine);
+            break;
+        }
+        pendingAdd.value = null;
       }
       searchKeyword.value = ''
     })
@@ -165,19 +214,19 @@ const handleSearch = () => {
 }
 
 // 选择/取消选择药材
-const toggleSelect = (medicine: Medicine) => {
-  const index = selectedMedicines.value.findIndex(item => item.name === medicine.name)
-  if (index === -1) {
-    selectedMedicines.value.push({
-      id: medicine.id,
-      name: medicine.name,
-      weight: 15,
-      unit: 'g'
-    })
-  } else {
-    selectedMedicines.value.splice(index, 1)
-  }
-}
+// const toggleSelect = (medicine: Medicine) => {
+//   const index = selectedMedicines.value.findIndex(item => item.name === medicine.name)
+//   if (index === -1) {
+//     selectedMedicines.value.push({
+//       id: medicine.id,
+//       name: medicine.name,
+//       weight: 15,
+//       unit: 'g'
+//     })
+//   } else {
+//     selectedMedicines.value.splice(index, 1)
+//   }
+// }
 
 // 移除已选择的药材
 const removeSelected = (id: string) => {
@@ -206,6 +255,8 @@ const handleConfirm = () => {
     return
   }
 
+  // 清除pendingAdd状态
+  pendingAdd.value = null
   emit('confirm', selectedMedicines.value)
   visible.value = false
 }
@@ -213,6 +264,8 @@ const handleConfirm = () => {
 // 关闭弹窗
 const handleClose = () => {
   searchKeyword.value = ''
+  // 清除pendingAdd状态
+  pendingAdd.value = null
   // 不再清空选中的药材，保持状态
 }
 
@@ -225,6 +278,71 @@ const handleWeightChange = (value: number, medicine: Medicine) => {
   const index = selectedMedicines.value.findIndex(item => item.id === medicine.id)
   if (index !== -1) {
     selectedMedicines.value[index].weight = value
+  }
+}
+
+// 处理添加命令
+const handleAddCommand = (command: string, medicine: Medicine) => {
+  const index = selectedMedicines.value.findIndex(item => item.id === medicine.id)
+  if (index === -1) return
+
+  // 标记当前的添加模式和位置
+  const addMode = {
+    mode: command,
+    index: index
+  }
+  // 存储添加模式，供后续选择药材时使用
+  pendingAdd.value = addMode
+
+  // 添加闪烁动画类
+  if (medicineListRef.value) {
+    medicineListRef.value.classList.add('highlight-border')
+  }
+}
+
+// 修改toggleSelect方法中的相关部分
+const toggleSelect = (medicine: Medicine) => {
+  // 如果有待添加的操作
+  if (pendingAdd.value) {
+    const { mode, index } = pendingAdd.value
+    const newMedicine = {
+      id: medicine.id,
+      name: medicine.name,
+      weight: 15,
+      unit: 'g'
+    }
+
+    switch (mode) {
+      case 'addAbove':
+        selectedMedicines.value.splice(index, 0, newMedicine)
+        break
+      case 'replace':
+        selectedMedicines.value.splice(index, 1, newMedicine)
+        break
+      case 'addBelow':
+        selectedMedicines.value.splice(index + 1, 0, newMedicine)
+        break
+    }
+
+    // 清除待添加状态并移除闪烁效果
+    pendingAdd.value = null
+    if (medicineListRef.value) {
+      medicineListRef.value.classList.remove('highlight-border')
+    }
+    return
+  }
+
+  // 常规的选择/取消选择逻辑
+  const index = selectedMedicines.value.findIndex(item => item.name === medicine.name)
+  if (index === -1) {
+    selectedMedicines.value.push({
+      id: medicine.id,
+      name: medicine.name,
+      weight: 15,
+      unit: 'g'
+    })
+  } else {
+    selectedMedicines.value.splice(index, 1)
   }
 }
 </script>
@@ -248,6 +366,23 @@ const handleWeightChange = (value: number, medicine: Medicine) => {
       flex: 1;
       border: 1px solid var(--el-border-color-lighter);
       border-radius: 4px;
+
+      &.highlight-border {
+        animation: borderBlink 1s infinite;
+      }
+
+      @keyframes borderBlink {
+        0% {
+          border-color: var(--el-border-color-lighter);
+        }
+        50% {
+          border-color: var(--el-color-primary);
+          box-shadow: 0 0 5px var(--el-color-primary);
+        }
+        100% {
+          border-color: var(--el-border-color-lighter);
+        }
+      }
 
       @media screen and (max-width: 768px) {
         height: 300px;
