@@ -30,7 +30,7 @@
             </div>
             <div class="info-item">
               <span class="label">性别：</span>
-              <span class="value">{{ acupointsData.gender === '1' ? '男' : '女' }}</span>
+              <span class="value">{{ acupointsData.gender }}</span>
             </div>
             <div class="info-item">
               <span class="label">年龄：</span>
