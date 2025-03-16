@@ -178,6 +178,7 @@ const handleConfirm = () => {
   
   emit('confirm', selectedZhen.value)
   visible.value = false
+  ElMessage.warning('当前修改尚未保存，退出可能丢失内容！')
 }
 
 // 关闭弹窗
