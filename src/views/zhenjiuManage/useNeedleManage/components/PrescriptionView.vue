@@ -141,7 +141,7 @@ watch(() => props.modelValue, (val) => {
     })
   }
   // 处理图片
-  imageLists.value = JSON.parse(props.acupointsData.imageUrls)
+  imageLists.value = props.acupointsData.imageUrls ? JSON.parse(props.acupointsData.imageUrls):[]
   // props.acupointsData.imageUrls = JSON.parse(props.acupointsData.imageUrls)
   console.log(props.acupointsData.imageUrls)
 })

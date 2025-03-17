@@ -55,7 +55,7 @@
 							<template #default="{ row }">
 								<div class="image-cell">
 									<el-image 
-										v-if="JSON.parse(row.imageUrls).length > 0"
+										v-if="row.imageUrls && JSON.parse(row.imageUrls).length > 0"
 										:src="JSON.parse(row.imageUrls)[0]"
 										:preview-src-list="[JSON.parse(row.imageUrls)[0]]"
 										:initial-index="0"
@@ -64,7 +64,7 @@
 										fit="cover"
 									/>
 									<span v-else>暂无图片</span>
-									<span v-if="JSON.parse(row.imageUrls).length > 1">...</span>
+									<span v-if="row.imageUrls && JSON.parse(row.imageUrls).length > 1">...</span>
 								</div>
 							</template>
 						</vxe-column>
