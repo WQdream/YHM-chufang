@@ -341,7 +341,7 @@ const handleEdit = (row: any) => {
 		diagnosis: row.diagnosis,
 		acupoints: row.acupoints,
 		remark: row.remark,
-		imageUrls: JSON.parse(row.imageUrls)
+		imageUrls: row.imageUrls ? JSON.parse(row.imageUrls) : []
 	})
 
 	if (row.acupoints) {
