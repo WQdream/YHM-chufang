@@ -30,7 +30,7 @@
             </div>
             <div class="info-item">
               <span class="label">性别：</span>
-              <span class="value">{{ acupointsData.gender === '1' ? '男' : '女' }}</span>
+              <span class="value">{{ acupointsData.gender }}</span>
             </div>
             <div class="info-item">
               <span class="label">年龄：</span>
@@ -66,6 +66,22 @@
           <div class="section-title">备注</div>
           <div class="section-content">{{ acupointsData.remark }}</div>
         </div>
+
+        <!-- 前后对比图 -->
+        <div class="section" v-if="imageLists.length > 0">
+          <div class="section-title">前后对比图</div>
+          <div class="image-section">
+            <el-image 
+              v-for="(imageUrl, index) in imageLists"
+              :key="index"
+              :src="imageUrl"
+              :preview-src-list="imageLists"
+              fit="contain"
+              :initial-index="index"
+              class="prescription-image"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </el-dialog>
@@ -85,6 +101,9 @@ interface AcupointsData {
   diagnosis: string
   acupoints: string
   remark: string
+  imageUrl: string,
+  imageUrls: string
+
 }
 
 interface Medicine {
@@ -104,6 +123,7 @@ const emit = defineEmits<{
 const visible = ref(false)
 const prescriptionMedicines = ref<Medicine[]>([])
 const printRef = ref<HTMLElement | null>(null)
+let imageLists = ref([])
 
 // 监听弹窗显示状态
 watch(() => props.modelValue, (val) => {
@@ -120,6 +140,10 @@ watch(() => props.modelValue, (val) => {
       }
     })
   }
+  // 处理图片
+  imageLists.value = props.acupointsData.imageUrls ? JSON.parse(props.acupointsData.imageUrls):[]
+  // props.acupointsData.imageUrls = JSON.parse(props.acupointsData.imageUrls)
+  console.log(props.acupointsData.imageUrls)
 })
 
 // 监听内部显示状态
@@ -334,6 +358,159 @@ const handlePrint = () => {
     }
 
     .image-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 16px;
+      
+      .prescription-image {
+        max-width: 100px;
+        max-height: 100px;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      @media screen and (max-width: 768px) {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+    }
+  }
+}
+
+// 打印样式
+@media print {
+  .prescription-content {
+    padding: 20px !important;
+    box-shadow: none !important;
+  }
+
+  .action-bar {
+    display: none !important;
+  }
+
+  .section-content {
+    border: 1px solid #dcdfe6 !important;
+  }
+}
+
+.prescription-view {
+  .action-bar {
+    margin-bottom: 20px;
+    text-align: right;
+  }
+
+  .prescription-content {
+    background: #fff;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+
+    .prescription-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e4e7ed;
+
+      h1 {
+        font-size: 24px;
+        color: #303133;
+        margin: 0 0 10px 0;
+        font-weight: 600;
+      }
+
+      .prescription-date {
+        color: #909399;
+        font-size: 14px;
+      }
+    }
+
+    .info-section {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+
+      .info-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 40px;
+
+        .info-item {
+          display: flex;
+          align-items: center;
+
+          .label {
+            color: #606266;
+            margin-right: 8px;
+            font-weight: 500;
+          }
+
+          .value {
+            color: #303133;
+          }
+        }
+      }
+    }
+
+    .section {
+      margin-bottom: 24px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .section-title {
+        font-size: 16px;
+        color: #303133;
+        font-weight: 600;
+        margin-bottom: 12px;
+        position: relative;
+        padding-left: 12px;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 16px;
+          background: var(--el-color-primary);
+          border-radius: 2px;
+        }
+      }
+
+      .section-content {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+        color: #606266;
+        line-height: 1.6;
+      }
+
+      .medicine-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+
+        .medicine-item {
+          padding: 8px 16px;
+          background: #fff;
+          border-radius: 4px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          white-space: nowrap;
+          flex: 0 0 auto;
+        }
+
+        .separator {
+          color: #606266;
+          display: none;
+        }
+      }
+    }
+
+    .image-section {
       // text-align: center;
       
       .prescription-image {
@@ -361,4 +538,4 @@ const handlePrint = () => {
     border: 1px solid #dcdfe6 !important;
   }
 }
-</style> 
+</style>

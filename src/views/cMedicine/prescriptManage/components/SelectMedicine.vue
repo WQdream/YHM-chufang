@@ -181,28 +181,38 @@ const getMedicineList = (keyword = '') => {
         unit: item.unit || 'g'
       }))
 
-      if(medicineList.value.length == 1 && pendingAdd.value) {
+      if(medicineList.value.length == 1) {
         const medicine = medicineList.value[0];
-        const { mode, index } = pendingAdd.value;
-        const newMedicine = {
-          id: medicine.id,
-          name: medicine.name,
-          weight: 15,
-          unit: medicine.unit || 'g'
-        };
+        if (pendingAdd.value) {
+          const { mode, index } = pendingAdd.value;
+          const newMedicine = {
+            id: medicine.id,
+            name: medicine.name,
+            weight: 15,
+            unit: medicine.unit || 'g'
+          };
 
-        switch (mode) {
-          case 'addAbove':
-            selectedMedicines.value.splice(index, 0, newMedicine);
-            break;
-          case 'replace':
-            selectedMedicines.value.splice(index, 1, newMedicine);
-            break;
-          case 'addBelow':
-            selectedMedicines.value.splice(index + 1, 0, newMedicine);
-            break;
+          switch (mode) {
+            case 'addAbove':
+              selectedMedicines.value.splice(index, 0, newMedicine);
+              break;
+            case 'replace':
+              selectedMedicines.value.splice(index, 1, newMedicine);
+              break;
+            case 'addBelow':
+              selectedMedicines.value.splice(index + 1, 0, newMedicine);
+              break;
+          }
+          pendingAdd.value = null;
+        } else if (!isSelected(medicine.name)) {
+          // 如果没有待添加操作且药材未被选中，直接添加到末尾
+          selectedMedicines.value.push({
+            id: medicine.id,
+            name: medicine.name,
+            weight: 15,
+            unit: medicine.unit || 'g'
+          });
         }
-        pendingAdd.value = null;
       }
       searchKeyword.value = ''
     })
@@ -259,6 +269,7 @@ const handleConfirm = () => {
   pendingAdd.value = null
   emit('confirm', selectedMedicines.value)
   visible.value = false
+  ElMessage.warning('当前修改尚未保存，退出可能丢失内容！')
 }
 
 // 关闭弹窗

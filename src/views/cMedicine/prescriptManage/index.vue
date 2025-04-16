@@ -124,7 +124,7 @@
 					</el-col>
 				</el-row>
 				
-				<el-row :gutter="20" style="margin: 20px;">
+				<el-row :gutter="20" style="margin: 20px 0;">
 					<el-col :span="12">
 						<el-form-item label="性别" required>
 							<el-radio-group v-model="formData.gender">
@@ -454,7 +454,7 @@ const handleAdd = () => {
 	Object.assign(formData, {
 		id: '',
 		patientName: '',
-		age: '',
+		age: '0',
 		gender: '1',
 		prescriptionDate: '',
 		diagnosis: '',

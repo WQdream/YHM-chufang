@@ -51,7 +51,23 @@
 						<vxe-column field="diagnosis" title="临床诊断" :width='isMobile?"30%":""'></vxe-column>
 						<vxe-column field="acupoints" title="穴位" :width='isMobile?"30%":""'></vxe-column>
 						<vxe-column field="remark" title="备注" :width='isMobile?"30%":""'></vxe-column>
-						
+						<vxe-column field="imageUrl" align="center" title="前后对比图" :width='isMobile?"30%":""'>
+							<template #default="{ row }">
+								<div class="image-cell">
+									<el-image 
+										v-if="row.imageUrls && JSON.parse(row.imageUrls).length > 0"
+										:src="JSON.parse(row.imageUrls)[0]"
+										:preview-src-list="[JSON.parse(row.imageUrls)[0]]"
+										:initial-index="0"
+										preview-teleported
+										class="table-image"
+										fit="cover"
+									/>
+									<span v-else>暂无图片</span>
+									<span v-if="row.imageUrls && JSON.parse(row.imageUrls).length > 1">...</span>
+								</div>
+							</template>
+						</vxe-column>
 						<vxe-column field="active" title="操作" width="180" align="center">
 							<template #default="{ row }">
 							<div class="flex items-center justify-center space-x-2">
@@ -110,7 +126,7 @@
 					</el-col>
 				</el-row>
 				
-				<el-row :gutter="20" style="margin: 20px;">
+				<el-row :gutter="20" style="margin: 20px 0;">
 					<el-col :span="12">
 						<el-form-item label="性别" required>
 							<el-radio-group v-model="formData.gender">
@@ -169,7 +185,28 @@
 						placeholder="请输入备注信息"
 					/>
 				</el-form-item>
-
+				<el-form-item label="前后对比图">
+					<div class="image-list">
+						<div v-for="(url, index) in formData.imageUrls" :key="index" class="image-item">
+							<div class="image-preview">
+								<img :src="checkHttpProtocol(url) ? url : baseUrl + url" class="acupoints-image" />
+								<div class="image-actions" style="cursor: pointer;" @click.stop="handleImageRemove(index)">
+									<el-icon class="delete-icon"><Delete /></el-icon>
+								</div>
+							</div>
+						</div>
+						<el-upload
+							class="acupoints-uploader"
+							:action="uploadUrl"
+							:show-file-list="false"
+							:on-success="handleImageSuccess"
+							:before-upload="beforeImageUpload"
+							multiple
+						>
+							<el-icon class="acupoints-uploader-icon"><Plus /></el-icon>
+						</el-upload>
+					</div>
+				</el-form-item>
 			</el-form>
 			<template #footer>
 				<span class="dialog-footer">
@@ -283,6 +320,7 @@ const formData = reactive({
 	acupunctureDate: '',
 	diagnosis: '',
 	acupoints: '',
+	imageUrls: [], // 存储多张图片的URL数组
 	remark: ''
 });
 
@@ -302,7 +340,8 @@ const handleEdit = (row: any) => {
 		acupunctureDate: row.acupunctureDate,
 		diagnosis: row.diagnosis,
 		acupoints: row.acupoints,
-		remark: row.remark
+		remark: row.remark,
+		imageUrls: row.imageUrls ? JSON.parse(row.imageUrls) : []
 	})
 
 	if (row.acupoints) {
@@ -442,14 +481,14 @@ const handleAdd = () => {
 	Object.assign(formData, {
 		id: '',
 		patientName: '',
-		age: '',
+		age: '0',
 		gender: '1',
 		acupunctureDate: '',
 		diagnosis: '',
 		acupoints: '',
 		imageUrl: '',
 		remark: '',
-		pairs: 1  // 默认值为1
+		imageUrls: []
 	})
 	selectedZhen.value = []
 	dialogVisible.value = true
@@ -647,11 +686,11 @@ const handleImportSubmit = () => {
 
 // 添加图片上传相关方法
 const handleImageSuccess = (response: any) => {
-	formData.imageUrl = response.data.url; // 根据实际返回数据结构调整
+	formData.imageUrls.push(response.data.url);
 };
 
-const handleImageRemove = (file?: any) => {
-	formData.imageUrl = ''
+const handleImageRemove = (index: number) => {
+	formData.imageUrls.splice(index, 1)
 }
 
 // 清空表单
@@ -999,6 +1038,79 @@ const handleWeightConfirm = () => {
 	}
 }
 
+.image-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.image-item {
+	position: relative;
+}
+
+.image-preview {
+	position: relative;
+	width: 100px;
+	height: 100px;
+	border: 1px dashed #d9d9d9;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+@media screen and (max-width: 768px) {
+  .image-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .image-preview,
+  .acupoints-uploader-icon {
+    font-size: 18px;
+    color: #8c939d;
+    width: 100px;
+    height: 100px;
+    text-align: center;
+    display: flex
+;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+  }
+  .acupoints-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+.acupoints-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.image-actions {
+	position: absolute;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	top: 0;
+	right: 0;
+	// padding: 8px;
+	width: 35px;
+	height: 35px;
+	background-color: rgba(0, 0, 0, 0.5);
+	border-bottom-left-radius: 6px;
+}
+
+.delete-icon {
+	color: #fff;
+	cursor: pointer;
+}
+
 .acupoints-uploader-icon {
 	font-size: 28px;
 	color: #8c939d;
@@ -1008,13 +1120,8 @@ const handleWeightConfirm = () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-}
-
-.acupoints-image {
-	width: 100px;
-	height: 100px;
-	display: block;
-	object-fit: cover;
+	border: 1px dashed #d9d9d9;
+	border-radius: 6px;
 }
 
 .acupoints-display {
