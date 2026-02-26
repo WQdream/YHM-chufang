@@ -237,6 +237,21 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					},
 				],
 			},
+			{
+				path: '/address',
+				name: 'address',
+				component: () => import('/@/views/address/index.vue'),
+				meta: {
+					title: '地址',
+					isLink: '',
+					isHide: false,
+					isKeepAlive: true,
+					isAffix: false,
+					isIframe: false,
+					roles: ['admin'],
+					icon: 'ele-DataLine',
+				}
+			},
 			// {
 			// 	path: '/system',
 			// 	name: 'system',
