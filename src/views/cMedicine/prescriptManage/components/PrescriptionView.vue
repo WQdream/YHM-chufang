@@ -9,12 +9,12 @@
     <div class="prescription-view">
       <!-- 打印按钮 -->
       <div class="action-bar">
-        <el-button type="primary" size="mini" @click="handleCopy">
+        <!-- <el-button type="primary" size="mini" @click="handleCopy">
           <el-icon><CopyDocument /></el-icon>复制处方
         </el-button>
         <el-button type="primary" size="mini" @click="handlePrint">
           <el-icon><Printer /></el-icon>打印处方
-        </el-button>
+        </el-button> -->
       </div>
 
       <!-- 处方内容 -->

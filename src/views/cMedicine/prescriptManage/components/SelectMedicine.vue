@@ -12,10 +12,10 @@
         <el-input
           v-model="searchKeyword"
           placeholder="请输入药材名称"
-          @keyup.enter="handleSearch"
           clearable
           @clear="getMedicineList"
         >
+        <!-- @keyup.enter="handleSearch" -->
           <template #append>
             <el-button @click="handleSearch">
               <el-icon><Search /></el-icon>
@@ -171,9 +171,16 @@ watch(() => pendingAdd.value, (val) => {
 
 // 获取药材列表
 const getMedicineList = (keyword = '') => {
+  // if(keyword.length !== 0 && keyword.length < 2){
+  //   ElMessage.warning('请输入两个字以上')
+  //   return
+  // }
   useChineseMedicineApi()
     .getMedicines({page:1, pageSize:9999, name: keyword })
     .then((res) => {
+      if(res.data.list.length == 0) {
+        ElMessage.warning('请输入全称进行搜索！')
+      }
       medicineList.value = res.data.list.map(item => ({
         id: item.id,
         name: item.name,
@@ -181,39 +188,39 @@ const getMedicineList = (keyword = '') => {
         unit: item.unit || 'g'
       }))
 
-      if(medicineList.value.length == 1) {
-        const medicine = medicineList.value[0];
-        if (pendingAdd.value) {
-          const { mode, index } = pendingAdd.value;
-          const newMedicine = {
-            id: medicine.id,
-            name: medicine.name,
-            weight: 15,
-            unit: medicine.unit || 'g'
-          };
+      // if(medicineList.value.length == 1) {
+      //   const medicine = medicineList.value[0];
+      //   if (pendingAdd.value) {
+      //     const { mode, index } = pendingAdd.value;
+      //     const newMedicine = {
+      //       id: medicine.id,
+      //       name: medicine.name,
+      //       weight: 15,
+      //       unit: medicine.unit || 'g'
+      //     };
 
-          switch (mode) {
-            case 'addAbove':
-              selectedMedicines.value.splice(index, 0, newMedicine);
-              break;
-            case 'replace':
-              selectedMedicines.value.splice(index, 1, newMedicine);
-              break;
-            case 'addBelow':
-              selectedMedicines.value.splice(index + 1, 0, newMedicine);
-              break;
-          }
-          pendingAdd.value = null;
-        } else if (!isSelected(medicine.name)) {
-          // 如果没有待添加操作且药材未被选中，直接添加到末尾
-          selectedMedicines.value.push({
-            id: medicine.id,
-            name: medicine.name,
-            weight: 15,
-            unit: medicine.unit || 'g'
-          });
-        }
-      }
+      //     switch (mode) {
+      //       case 'addAbove':
+      //         selectedMedicines.value.splice(index, 0, newMedicine);
+      //         break;
+      //       case 'replace':
+      //         selectedMedicines.value.splice(index, 1, newMedicine);
+      //         break;
+      //       case 'addBelow':
+      //         selectedMedicines.value.splice(index + 1, 0, newMedicine);
+      //         break;
+      //     }
+      //     pendingAdd.value = null;
+      //   } else if (!isSelected(medicine.name)) {
+      //     // 如果没有待添加操作且药材未被选中，直接添加到末尾
+      //     selectedMedicines.value.push({
+      //       id: medicine.id,
+      //       name: medicine.name,
+      //       weight: 15,
+      //       unit: medicine.unit || 'g'
+      //     });
+      //   }
+      // }
       searchKeyword.value = ''
     })
 }

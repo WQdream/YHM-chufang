@@ -7,7 +7,7 @@
 				<div style="margin-bottom: 10px;">
 					<el-button type="primary" size="default" @click="handleAdd">新增处方</el-button>
 					<!-- <el-button type="primary" size="default" @click="handleImport">导入</el-button> -->
-					<el-button type="danger" size="default" @click="banchDelete">批量删除</el-button>
+					<!-- <el-button type="danger" size="default" @click="banchDelete">批量删除</el-button> -->
 					
 					<!-- 添加更多操作下拉菜单 -->
 					<el-dropdown @command="handleCommand" style="margin-left: 10px;">
@@ -80,7 +80,7 @@
 										<template #dropdown>
 											<el-dropdown-menu>
 												<el-dropdown-item @click="handleEdit(row)">编辑</el-dropdown-item>
-												<el-dropdown-item @click="handleReuse(row)">复用</el-dropdown-item>
+												<!-- <el-dropdown-item @click="handleReuse(row)">复用</el-dropdown-item> -->
 												<el-dropdown-item divided @click="handleDelete(row)" class="text-danger">删除</el-dropdown-item>
 											</el-dropdown-menu>
 										</template>

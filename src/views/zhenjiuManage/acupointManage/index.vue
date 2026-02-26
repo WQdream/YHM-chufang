@@ -7,7 +7,7 @@
 				<div style="margin-bottom: 10px;">
 					<el-button type="primary" size="default" @click="handleAdd">新增穴位</el-button>
 					<el-button type="primary" size="default" @click="handleImport">导入</el-button>
-					<el-button type="danger" size="default" @click="banchDelete">批量删除</el-button>
+					<!-- <el-button type="danger" size="default" @click="banchDelete">批量删除</el-button> -->
 				</div>
 				<!-- 表格区域 -->
 				<div class="table-wrapper">
